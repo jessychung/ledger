@@ -1,4 +1,5 @@
 import React from 'react'
+import { monthShort } from './store'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) => {
@@ -43,12 +44,14 @@ export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) 
 export function ProgressRing({ pct, size = 240, stroke = 10, color, track }) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
-  const offset = c - Math.min(Math.max(pct, 0), 1) * c
+  const clamped = Math.min(Math.max(pct, 0), 1)
+  const offset = c - clamped * c
   return (
     <svg width={size} height={size} className="donut" style={{ display: 'block' }}>
       <circle cx={size/2} cy={size/2} r={r} stroke={track || 'var(--surface-2)'} strokeWidth={stroke} fill="none" />
       <circle cx={size/2} cy={size/2} r={r}
-        stroke={color || 'var(--ink)'} strokeWidth={stroke} fill="none" strokeLinecap="round"
+        stroke={color || 'var(--ink)'} strokeWidth={stroke} fill="none"
+        strokeLinecap="round"
         strokeDasharray={c} strokeDashoffset={offset}
         style={{ transition: 'stroke-dashoffset 600ms cubic-bezier(.2,.8,.2,1), stroke 200ms' }}
       />
@@ -66,13 +69,20 @@ export function Donut({ data, size = 200, stroke = 22, hoverIdx, onHover }) {
     <svg width={size} height={size} className="donut">
       <circle cx={size/2} cy={size/2} r={r} stroke="var(--surface-2)" strokeWidth={stroke} fill="none" />
       {data.map((d, i) => {
-        const len = Math.max(0, (d.value / total) * c - 2)
-        const offset = -acc
-        acc += (d.value / total) * c
+        const frac = d.value / total
+        const len = Math.max(0, frac * c - 2)
+        const dasharray = `${len} ${c - len}`
+        const dashoffset = -acc
+        acc += frac * c
         return (
-          <circle key={d.key || i} cx={size/2} cy={size/2} r={r}
-            stroke={d.color} strokeWidth={hoverIdx === i ? stroke + 4 : stroke} fill="none"
-            strokeDasharray={`${len} ${c - len}`} strokeDashoffset={offset} className="seg"
+          <circle key={d.key || i}
+            cx={size/2} cy={size/2} r={r}
+            stroke={d.color}
+            strokeWidth={hoverIdx === i ? stroke + 4 : stroke}
+            fill="none"
+            strokeDasharray={dasharray}
+            strokeDashoffset={dashoffset}
+            className="seg"
             onMouseEnter={() => onHover && onHover(i)}
             onMouseLeave={() => onHover && onHover(null)}
             style={{ cursor: onHover ? 'pointer' : 'default' }}
@@ -83,9 +93,31 @@ export function Donut({ data, size = 200, stroke = 22, hoverIdx, onHover }) {
   )
 }
 
-// ── Month bar chart ───────────────────────────────────────────────────────────
+// ── Sparkline ─────────────────────────────────────────────────────────────────
+export function Sparkline({ values, width = 220, height = 50, color = 'var(--ink)', area = true }) {
+  if (!values || values.length === 0) return null
+  const max = Math.max(...values, 1)
+  const stepX = width / Math.max(values.length - 1, 1)
+  const pts = values.map((v, i) => {
+    const x = i * stepX
+    const y = height - (v / max) * (height - 6) - 3
+    return [x, y]
+  })
+  const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')
+  const areaD = d + ` L ${width},${height} L 0,${height} Z`
+  return (
+    <svg width={width} height={height} style={{ display: 'block', overflow: 'visible' }}>
+      {area && <path d={areaD} fill={color} opacity="0.08" />}
+      <path d={d} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((p, i) => (
+        <circle key={i} cx={p[0]} cy={p[1]} r={i === pts.length - 1 ? 3 : 0} fill={color} />
+      ))}
+    </svg>
+  )
+}
+
+// ── Month bars ────────────────────────────────────────────────────────────────
 export function MonthBars({ months, values, budget, currencySym = '$', onPick, activeKey }) {
-  const { monthShort } = { monthShort: (k) => { const [y, m] = k.split('-').map(Number); return new Date(y, m-1, 1).toLocaleString(undefined, { month: 'short' }) } }
   const max = Math.max(...values, budget || 0, 1)
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap: 10, alignItems: 'end', height: 160 }}>
@@ -100,9 +132,13 @@ export function MonthBars({ months, values, budget, currencySym = '$', onPick, a
             <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
               {currencySym}{Math.round(v).toLocaleString()}
             </div>
-            <div style={{ width: '70%', maxWidth: 36, height: h, borderRadius: 4, transition: 'all 200ms',
-              background: isActive ? 'var(--ink)' : overBudget ? 'var(--alert)' : 'var(--ink-2)',
-              opacity: isActive ? 1 : 0.65 }} />
+            <div style={{
+              width: '70%', maxWidth: 36, height: h,
+              background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
+              borderRadius: 4,
+              opacity: isActive ? 1 : 0.65,
+              transition: 'all 200ms',
+            }} />
             <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {monthShort(mk)}
             </div>
@@ -118,17 +154,20 @@ export function CategoryChip({ cat, selected, onClick }) {
   return (
     <button type="button" onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999,
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '10px 14px', borderRadius: 999,
         border: '1px solid ' + (selected ? 'var(--ink)' : 'var(--line)'),
         background: selected ? 'var(--ink)' : 'var(--surface)',
         color: selected ? 'var(--bg)' : 'var(--ink-2)',
-        fontSize: 14, fontWeight: 500, cursor: 'pointer', transition: 'all 160ms',
+        fontSize: 14, fontWeight: 500, cursor: 'pointer',
+        transition: 'all 160ms',
       }}>
       <span style={{
-        width: 20, height: 20, borderRadius: 6, marginLeft: -4, display: 'grid', placeItems: 'center',
+        width: 20, height: 20, borderRadius: 6,
         background: selected
           ? 'color-mix(in oklab, ' + cat.color + ' 35%, transparent)'
           : 'color-mix(in oklab, ' + cat.color + ' 15%, var(--surface))',
+        display: 'grid', placeItems: 'center', marginLeft: -4,
       }}>
         <Icon name={cat.icon} size={12} color={selected ? 'var(--bg)' : cat.color} />
       </span>
@@ -141,7 +180,7 @@ export function CategoryChip({ cat, selected, onClick }) {
 export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
   const d = new Date(expense.date)
   const dateLabel = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
-  const showCents = currency ? !['JPY', 'KRW', 'VND', 'CLP', 'HUF'].includes(currency) : true
+  const showCents = currency ? !['JPY','KRW','VND','CLP','HUF'].includes(currency) : true
   const amt = Number(expense.amount)
   const amtStr = showCents ? amt.toFixed(2) : Math.round(amt).toLocaleString()
   return (
@@ -168,14 +207,17 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
   )
 }
 
-// ── Sheet (bottom sheet / modal) ──────────────────────────────────────────────
+// ── Sheet ─────────────────────────────────────────────────────────────────────
 export function Sheet({ open, onClose, title, children }) {
   React.useEffect(() => {
     if (!open) return
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
   }, [open, onClose])
   if (!open) return null
   return (
@@ -185,7 +227,7 @@ export function Sheet({ open, onClose, title, children }) {
         <div className="sheet-handle" />
         <div className="between" style={{ marginBottom: 14 }}>
           <h2 className="h2">{title}</h2>
-          <button className="btn ghost" onClick={onClose} style={{ padding: 8 }}>
+          <button className="btn ghost" onClick={onClose} aria-label="Close" style={{ padding: 8 }}>
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -198,12 +240,14 @@ export function Sheet({ open, onClose, title, children }) {
 // ── Toast ─────────────────────────────────────────────────────────────────────
 export function useToast() {
   const [msg, setMsg] = React.useState(null)
+  const timerRef = React.useRef(null)
   const show = React.useCallback((m) => {
     setMsg(m)
-    clearTimeout(window.__toastT)
-    window.__toastT = setTimeout(() => setMsg(null), 1800)
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setMsg(null), 1800)
   }, [])
-  return [msg ? <div className="toast">{msg}</div> : null, show]
+  const node = msg ? <div className="toast">{msg}</div> : null
+  return [node, show]
 }
 
 // ── Switch ────────────────────────────────────────────────────────────────────
@@ -214,10 +258,12 @@ export function Switch({ on, onChange }) {
         width: 44, height: 26, borderRadius: 999,
         background: on ? 'var(--ink)' : 'var(--line-2)',
         border: 0, padding: 2, cursor: 'pointer',
-        display: 'flex', alignItems: 'center', transition: 'background 200ms',
+        display: 'flex', alignItems: 'center',
+        transition: 'background 200ms',
       }}>
       <span style={{
-        width: 22, height: 22, borderRadius: '50%', background: 'var(--bg)',
+        width: 22, height: 22, borderRadius: '50%',
+        background: 'var(--bg)',
         transform: on ? 'translateX(18px)' : 'translateX(0)',
         transition: 'transform 200ms cubic-bezier(.2,.8,.2,1)',
         boxShadow: '0 1px 2px rgba(0,0,0,0.15)',

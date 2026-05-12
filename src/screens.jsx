@@ -9,11 +9,14 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const [chartMode, setChartMode] = React.useState('donut')
   const [hoverIdx, setHoverIdx] = React.useState(null)
 
-  const { includeFixedInTotal: includeFixed, currencySymbol: sym, budget, currency } = store.state.settings
-  const showCents = hasCents(currency)
+  const includeFixed = store.state.settings.includeFixedInTotal
+  const sym = store.state.settings.currencySymbol
+  const budget = store.state.settings.budget
+  const showCents = hasCents(store.state.settings.currency)
 
   const months = React.useMemo(() => {
-    const arr = [], now = new Date()
+    const arr = []
+    const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       arr.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
@@ -46,7 +49,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           <div className="row gap-3" style={{ alignItems: 'center' }}>
             <button className="btn ghost" style={{ padding: 8, borderRadius: '50%' }}
               onClick={() => { const i = months.indexOf(activeMonth); if (i > 0) setActiveMonth(months[i - 1]) }}
-              disabled={months.indexOf(activeMonth) <= 0}>
+              disabled={months.indexOf(activeMonth) <= 0} aria-label="Previous month">
               <Icon name="chevron-l" size={18} />
             </button>
             <h1 className="h1" style={{ fontSize: 32, lineHeight: 1, letterSpacing: '-0.015em' }}>
@@ -57,22 +60,25 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
             </h1>
             <button className="btn ghost" style={{ padding: 8, borderRadius: '50%' }}
               onClick={() => { const i = months.indexOf(activeMonth); if (i < months.length - 1) setActiveMonth(months[i + 1]) }}
-              disabled={activeMonth === nowMonthKey() || months.indexOf(activeMonth) >= months.length - 1}>
+              disabled={activeMonth === nowMonthKey() || months.indexOf(activeMonth) >= months.length - 1}
+              aria-label="Next month">
               <Icon name="chevron-r" size={18} />
             </button>
           </div>
-          {activeMonth !== nowMonthKey() &&
-            <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setActiveMonth(nowMonthKey())}>
+          {activeMonth !== nowMonthKey() && (
+            <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }}
+              onClick={() => setActiveMonth(nowMonthKey())}>
               Jump to current
             </button>
-          }
+          )}
         </div>
         <div className="month-strip">
-          {months.map(m =>
-            <button key={m} className={'month-chip' + (m === activeMonth ? ' active' : '')} onClick={() => setActiveMonth(m)}>
+          {months.map(m => (
+            <button key={m} className={'month-chip' + (m === activeMonth ? ' active' : '')}
+              onClick={() => setActiveMonth(m)}>
               {monthShort(m)}{m === nowMonthKey() ? ' · now' : ''}
             </button>
-          )}
+          ))}
         </div>
       </div>
 
@@ -87,16 +93,15 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
               {showCents && <span className="cents">.{fmt(total, sym).cents}</span>}
             </div>
             <div className="row gap-3" style={{ flexWrap: 'wrap', color: 'var(--muted)', fontSize: 13 }}>
-              {budget > 0 && (
-                overBudget
-                  ? <span style={{ color: 'var(--alert)' }}>{sym}{Math.abs(remaining).toFixed(0)} over · of {sym}{budget.toLocaleString()} budget</span>
-                  : <span>{sym}{remaining.toFixed(0)} of {sym}{budget.toLocaleString()} left</span>
+              {budget > 0 && (overBudget
+                ? <span style={{ color: 'var(--alert)' }}>{sym}{Math.abs(remaining).toFixed(0)} over · of {sym}{budget.toLocaleString()} budget</span>
+                : <span>{sym}{remaining.toFixed(0)} of {sym}{budget.toLocaleString()} left</span>
               )}
-              {includeFixed &&
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {includeFixed && (
+                <span title="Fixed monthly expenses included" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <Icon name="repeat" size={12} /> incl. fixed
                 </span>
-              }
+              )}
             </div>
           </div>
           <div style={{ position: 'relative', display: 'grid', placeItems: 'center' }} className="hero-ring">
@@ -127,16 +132,21 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
                       <Donut data={breakdownData} size={180} stroke={20} hoverIdx={hoverIdx} onHover={setHoverIdx} />
                       <div style={{ position: 'absolute', textAlign: 'center' }}>
                         {hoverIdx !== null && breakdownData[hoverIdx]
-                          ? <><div className="muted" style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{breakdownData[hoverIdx].label}</div>
-                              <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{sym}{Math.round(breakdownData[hoverIdx].value)}</div></>
-                          : <><div className="muted" style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Total</div>
-                              <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{sym}{Math.round(total).toLocaleString()}</div></>
+                          ? <>
+                              <div className="muted" style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{breakdownData[hoverIdx].label}</div>
+                              <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{sym}{Math.round(breakdownData[hoverIdx].value)}</div>
+                            </>
+                          : <>
+                              <div className="muted" style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Total</div>
+                              <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{sym}{Math.round(total).toLocaleString()}</div>
+                            </>
                         }
                       </div>
                     </div>
                     <div className="stack gap-2">
                       {breakdownData.map((d, i) => (
-                        <div key={d.key} onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}
+                        <div key={d.key}
+                          onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}
                           style={{ display: 'grid', gridTemplateColumns: '24px 1fr auto', gap: 10, alignItems: 'center', padding: '4px 0' }}>
                           <span style={{ width: 24, height: 24, borderRadius: 7, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
                             <Icon name={d.icon} size={13} color={d.color} />
@@ -148,22 +158,25 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
                     </div>
                   </div>
                 : <div className="stack gap-3">
-                    {breakdownData.map(d => (
-                      <div key={d.key} className="stack gap-2">
-                        <div className="between">
-                          <div className="row gap-2">
-                            <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
-                              <Icon name={d.icon} size={12} color={d.color} />
-                            </span>
-                            <span style={{ fontSize: 14 }}>{d.label}</span>
+                    {breakdownData.map(d => {
+                      const frac = d.value / total
+                      return (
+                        <div key={d.key} className="stack gap-2">
+                          <div className="between">
+                            <div className="row gap-2">
+                              <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
+                                <Icon name={d.icon} size={12} color={d.color} />
+                              </span>
+                              <span style={{ fontSize: 14 }}>{d.label}</span>
+                            </div>
+                            <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
                           </div>
-                          <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                          <div className="bar-track">
+                            <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
+                          </div>
                         </div>
-                        <div className="bar-track">
-                          <div className="bar-fill" style={{ width: (d.value / total) * 100 + '%', background: d.color, transition: 'width 400ms' }} />
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
               }
             </div>
@@ -174,7 +187,8 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
       <div className="card">
         <div className="between" style={{ marginBottom: 6 }}>
           <h3 className="h2">Recent</h3>
-          <button className="btn ghost" style={{ fontSize: 13, padding: '6px 10px' }} onClick={() => onPickMonth && onPickMonth(activeMonth)}>
+          <button className="btn ghost" style={{ fontSize: 13, padding: '6px 10px' }}
+            onClick={() => onPickMonth && onPickMonth(activeMonth)}>
             View all <Icon name="chevron-r" size={14} />
           </button>
         </div>
@@ -182,18 +196,19 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           ? <div className="empty">Nothing yet — tap + to add an expense.</div>
           : <>
               <div>
-                {recentVisible.map(e =>
+                {recentVisible.map(e => (
                   <ExpenseRow key={e.id} expense={e} cat={store.catById(e.category)}
-                    currencySym={sym} currency={currency} onClick={() => onOpenExpense && onOpenExpense(e)} />
-                )}
+                    currencySym={sym} currency={store.state.settings.currency}
+                    onClick={() => onOpenExpense && onOpenExpense(e)} />
+                ))}
               </div>
-              {recent.length > 6 &&
+              {recent.length > 6 && (
                 <button className="btn ghost" style={{ width: '100%', marginTop: 10, fontSize: 13, justifyContent: 'center' }}
                   onClick={() => setRecentExpanded(v => !v)}>
                   {recentExpanded ? 'Show less' : `Show ${recent.length - 6} more`}
                   <Icon name="chevron-d" size={14} />
                 </button>
-              }
+              )}
             </>
         }
       </div>
@@ -214,7 +229,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
   const [mk, setMk] = React.useState(initialMonth || nowMonthKey())
   const [search, setSearch] = React.useState('')
   const [catFilter, setCatFilter] = React.useState('all')
-  const { currencySymbol: sym, currency, includeFixedInTotal: includeFixed } = store.state.settings
+  const sym = store.state.settings.currencySymbol
 
   const months = React.useMemo(() => {
     const set = new Set([nowMonthKey()])
@@ -222,7 +237,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
     return [...set].sort().reverse()
   }, [store.state.expenses])
 
-  const items = expensesForMonth(store.state, mk, includeFixed)
+  const items = expensesForMonth(store.state, mk, store.state.settings.includeFixedInTotal)
     .filter(e => catFilter === 'all' || e.category === catFilter)
     .filter(e => !search || (e.note || '').toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -233,7 +248,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
     <div className="stack gap-4">
       <div className="between">
         <div>
-          <div className="label-eyebrow">EXPENSES</div>
+          <div className="label-eyebrow">Expenses</div>
           <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk)}</h2>
         </div>
         <div className="stack" style={{ alignItems: 'flex-end' }}>
@@ -243,11 +258,11 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
       </div>
 
       <div className="month-strip">
-        {months.map(m =>
+        {months.map(m => (
           <button key={m} className={'month-chip' + (m === mk ? ' active' : '')} onClick={() => setMk(m)}>
-            {monthShort(m)}{m === nowMonthKey() ? ' · now' : ''}
+            {monthShort(m)}
           </button>
-        )}
+        ))}
       </div>
 
       <div className="row gap-2" style={{ flexWrap: 'wrap' }}>
@@ -268,11 +283,11 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
       <div className="card">
         {items.length === 0
           ? <div className="empty">No expenses match.</div>
-          : items.map(e =>
+          : items.map(e => (
               <ExpenseRow key={e.id} expense={e} cat={store.catById(e.category)}
-                currencySym={sym} currency={currency}
+                currencySym={sym} currency={store.state.settings.currency}
                 onClick={() => !e.fixed && onOpenExpense && onOpenExpense(e)} />
-            )
+            ))
         }
       </div>
     </div>
@@ -282,10 +297,14 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
 // ── Trends ────────────────────────────────────────────────────────────────────
 export function TrendsScreen() {
   const store = useStore()
-  const { currencySymbol: sym, budget, includeFixedInTotal: includeFixed } = store.state.settings
+  const sym = store.state.settings.currencySymbol
+  const budget = store.state.settings.budget
+  const includeFixed = store.state.settings.includeFixedInTotal
+  const [activeMonth, setActiveMonth] = React.useState(nowMonthKey())
 
   const trendMonths = React.useMemo(() => {
-    const arr = [], now = new Date()
+    const arr = []
+    const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       arr.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
@@ -295,99 +314,103 @@ export function TrendsScreen() {
 
   const totals = totalsByMonth(store.state, includeFixed)
   const trendValues = trendMonths.map(m => totals[m] || 0)
+  const avg = trendValues.reduce((s, v) => s + v, 0) / trendValues.length
+  const peak = Math.max(...trendValues)
 
-  const catBreakdown = React.useMemo(() =>
-    trendMonths.map(m => ({ mk: m, bd: breakdownByCategory(store.state, m, includeFixed) }))
-  , [store.state, includeFixed])
-
-  const activeCats = store.state.categories.filter(c =>
-    trendMonths.some(m => catBreakdown.find(b => b.mk === m)?.bd[c.id] > 0)
-  )
-
-  const nonZero = trendValues.filter(v => v > 0)
-  const stats = [
-    { k: 'Average', v: sym + Math.round(nonZero.reduce((s, v) => s + v, 0) / Math.max(nonZero.length, 1)).toLocaleString() },
-    { k: 'Highest', v: sym + Math.round(Math.max(...trendValues, 0)).toLocaleString() },
-    { k: 'Lowest',  v: nonZero.length ? sym + Math.round(Math.min(...nonZero)).toLocaleString() : '—' },
-  ]
+  const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
+  const breakdownData = store.state.categories
+    .map(c => ({ key: c.id, label: c.label, color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
+    .filter(d => d.value > 0)
+    .sort((a, b) => b.value - a.value)
+  const activeTotal = trendValues[trendMonths.indexOf(activeMonth)] || 0
 
   return (
     <div className="stack gap-5">
       <div>
         <div className="label-eyebrow">Trends</div>
-        <h2 className="h1" style={{ marginTop: 4 }}>Spending trends</h2>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        {stats.map(({ k, v }) => (
-          <div key={k} className="stat">
-            <div className="k">{k}</div>
-            <div className="v">{v}</div>
-          </div>
-        ))}
+        <h2 className="h1" style={{ marginTop: 4 }}>Last 6 months</h2>
       </div>
 
       <div className="card">
         <div className="between" style={{ marginBottom: 14 }}>
           <div>
-            <h3 className="h3">Last 6 months</h3>
-            <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Monthly totals</div>
+            <h3 className="h3">Monthly spending</h3>
+            <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Tap a bar to see breakdown</div>
           </div>
-          {budget > 0 &&
+          {budget > 0 && (
             <div className="muted mono" style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ width: 14, height: 1, background: 'var(--muted-2)', display: 'inline-block' }} />
               budget {sym}{budget.toLocaleString()}
             </div>
-          }
+          )}
         </div>
         <div style={{ position: 'relative' }}>
-          <MonthBars months={trendMonths} values={trendValues} budget={budget} currencySym={sym} />
+          <MonthBars months={trendMonths} values={trendValues} budget={budget}
+            currencySym={sym} activeKey={activeMonth} onPick={setActiveMonth} />
           {budget > 0 && (() => {
             const max = Math.max(...trendValues, budget, 1)
-            return <div style={{ position: 'absolute', left: 0, right: 0, top: 28 + (1 - budget / max) * 130, height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none' }} />
+            return (
+              <div style={{
+                position: 'absolute', left: 0, right: 0,
+                top: 28 + (1 - budget / max) * 130,
+                height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none',
+              }} />
+            )
           })()}
         </div>
       </div>
 
-      {activeCats.length > 0 && (
-        <div className="card">
-          <h3 className="h3" style={{ marginBottom: 16 }}>By category</h3>
-          <div className="stack gap-4">
-            {activeCats.map(c => {
-              const vals = trendMonths.map(m => catBreakdown.find(b => b.mk === m)?.bd[c.id] || 0)
-              const maxVal = Math.max(...vals, 1)
-              const avg = vals.reduce((s, v) => s + v, 0) / vals.length
-              return (
-                <div key={c.id} className="stack gap-2">
-                  <div className="between">
-                    <div className="row gap-2">
-                      <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + c.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
-                        <Icon name={c.icon} size={12} color={c.color} />
-                      </span>
-                      <span style={{ fontSize: 14 }}>{c.label}</span>
-                    </div>
-                    <span className="muted" style={{ fontSize: 12 }}>avg {sym}{Math.round(avg).toLocaleString()}/mo</span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${trendMonths.length}, 1fr)`, gap: 4, alignItems: 'end', height: 40 }}>
-                    {vals.map((v, i) => (
-                      <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                        <div style={{ width: '100%', height: Math.max(2, (v / maxVal) * 32), background: c.color, borderRadius: 3, opacity: 0.8 }} />
-                        <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{monthShort(trendMonths[i])}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <div className="stat">
+          <div className="k">Average</div>
+          <div className="v">{sym}{Math.round(avg).toLocaleString()}</div>
         </div>
-      )}
+        <div className="stat">
+          <div className="k">Peak</div>
+          <div className="v">{sym}{Math.round(peak).toLocaleString()}</div>
+        </div>
+        <div className="stat">
+          <div className="k">Budget</div>
+          <div className="v">{budget > 0 ? sym + Math.round(budget).toLocaleString() : '—'}</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="between" style={{ marginBottom: 16 }}>
+          <h3 className="h3">{monthLabel(activeMonth)}</h3>
+          <span className="muted" style={{ fontSize: 13 }}>{sym}{Math.round(activeTotal).toLocaleString()}</span>
+        </div>
+        {breakdownData.length === 0
+          ? <div className="empty">No expenses this month.</div>
+          : <div className="stack gap-3">
+              {breakdownData.map(d => {
+                const frac = activeTotal > 0 ? d.value / activeTotal : 0
+                return (
+                  <div key={d.key} className="stack gap-2">
+                    <div className="between">
+                      <div className="row gap-2">
+                        <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
+                          <Icon name={d.icon} size={12} color={d.color} />
+                        </span>
+                        <span style={{ fontSize: 14 }}>{d.label}</span>
+                      </div>
+                      <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                    </div>
+                    <div className="bar-track">
+                      <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+        }
+      </div>
     </div>
   )
 }
 
 // ── Expense form ──────────────────────────────────────────────────────────────
-export function ExpenseForm({ initial, onSave, onDelete }) {
+export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
   const store = useStore()
   const [amount, setAmount] = React.useState(initial?.amount ? String(initial.amount) : '')
   const [category, setCategory] = React.useState(initial?.category || store.state.categories[0]?.id || 'groceries')
@@ -395,6 +418,7 @@ export function ExpenseForm({ initial, onSave, onDelete }) {
   const [date, setDate] = React.useState(
     initial?.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
   )
+
   const sym = store.state.settings.currencySymbol
   const numAmount = parseFloat(amount)
   const valid = !isNaN(numAmount) && numAmount > 0
@@ -411,31 +435,40 @@ export function ExpenseForm({ initial, onSave, onDelete }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '10px 14px', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--surface)' }}>
           <span className="muted serif" style={{ fontSize: 28 }}>{sym}</span>
           <input type="number" step="0.01" inputMode="decimal" autoFocus
-            value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
+            value={amount} onChange={e => setAmount(e.target.value)}
+            placeholder="0.00" className="serif"
             style={{ flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: 36, color: 'var(--ink)', padding: 0, fontFamily: '"Instrument Serif", serif' }} />
         </div>
       </div>
+
       <div>
         <div className="field-label">Category</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {store.state.categories.map(c =>
+          {store.state.categories.map(c => (
             <CategoryChip key={c.id} cat={c} selected={category === c.id} onClick={() => setCategory(c.id)} />
-          )}
+          ))}
         </div>
       </div>
+
       <div>
         <div className="field-label">Date</div>
         <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} />
       </div>
+
       <div>
         <div className="field-label">Note (optional)</div>
         <input className="input" placeholder="e.g. lunch with Sam" value={note} onChange={e => setNote(e.target.value)} />
       </div>
+
       <div className="row gap-2" style={{ marginTop: 6 }}>
         <button className="btn primary" disabled={!valid} style={{ opacity: valid ? 1 : 0.4, flex: 1 }} onClick={submit}>
           {initial ? 'Save changes' : 'Add expense'}
         </button>
-        {onDelete && <button className="btn danger" style={{ flex: '0 0 auto' }} onClick={onDelete}><Icon name="trash" size={16} /></button>}
+        {onDelete && (
+          <button className="btn danger" style={{ flex: '0 0 auto' }} onClick={onDelete} aria-label="Delete">
+            <Icon name="trash" size={16} />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -445,7 +478,7 @@ export function ExpenseForm({ initial, onSave, onDelete }) {
 export function FixedScreen() {
   const store = useStore()
   const [editing, setEditing] = React.useState(null)
-  const { currencySymbol: sym, currency } = store.state.settings
+  const sym = store.state.settings.currencySymbol
   const total = store.state.fixed.reduce((s, f) => s + f.amount, 0)
   const editingItem = editing && editing !== 'new' ? store.state.fixed.find(f => f.id === editing) : null
 
@@ -462,7 +495,7 @@ export function FixedScreen() {
         </div>
       </div>
 
-      <p className="muted" style={{ fontSize: 14, margin: 0 }}>
+      <p className="muted" style={{ fontSize: 14, margin: 0, maxWidth: 540 }}>
         Recurring monthly costs — rent, subscriptions, gym. They count toward your monthly total automatically.
       </p>
 
@@ -471,8 +504,8 @@ export function FixedScreen() {
         {store.state.fixed.map(f => {
           const cat = store.catById(f.category)
           return (
-            <button key={f.id} className="lrow" onClick={() => setEditing(f.id)}
-              style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left', padding: '12px 0', cursor: 'pointer', borderWidth: '0px', borderTopStyle: 'none', borderRightStyle: 'none', borderLeftStyle: 'none' }}>
+            <button key={f.id} onClick={() => setEditing(f.id)}
+              style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left', padding: '12px 0', cursor: 'pointer', display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center' }}>
               <div className="ic" style={{ background: 'color-mix(in oklab, ' + cat.color + ' 15%, var(--surface))' }}>
                 <Icon name={cat.icon} size={15} color={cat.color} />
               </div>
@@ -480,18 +513,26 @@ export function FixedScreen() {
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</div>
                 <div className="meta">{cat.label} · monthly</div>
               </div>
-              <div className="amt">{sym}{hasCents(currency) ? f.amount.toFixed(2) : Math.round(f.amount).toLocaleString()}</div>
+              <div style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+                {sym}{hasCents(store.state.settings.currency) ? f.amount.toFixed(2) : Math.round(f.amount).toLocaleString()}
+              </div>
             </button>
           )
         })}
       </div>
 
-      <button className="btn" onClick={() => setEditing('new')}><Icon name="plus" size={16} /> Add fixed expense</button>
+      <button className="btn" onClick={() => setEditing('new')}>
+        <Icon name="plus" size={16} /> Add fixed expense
+      </button>
 
-      <Sheet open={!!editing} onClose={() => setEditing(null)} title={editing === 'new' ? 'New fixed expense' : 'Edit fixed expense'}>
+      <Sheet open={!!editing} onClose={() => setEditing(null)}
+        title={editing === 'new' ? 'New fixed expense' : 'Edit fixed expense'}>
         <FixedForm
           initial={editingItem}
-          onSave={data => { if (editing === 'new') store.addFixed(data); else store.updateFixed(editing, data); setEditing(null) }}
+          onSave={data => {
+            if (editing === 'new') store.addFixed(data); else store.updateFixed(editing, data)
+            setEditing(null)
+          }}
           onDelete={editingItem ? () => { store.deleteFixed(editing); setEditing(null) } : null} />
       </Sheet>
     </div>
@@ -506,6 +547,7 @@ function FixedForm({ initial, onSave, onDelete }) {
   const sym = store.state.settings.currencySymbol
   const numAmount = parseFloat(amount)
   const valid = label.trim() && !isNaN(numAmount) && numAmount > 0
+
   return (
     <div className="stack gap-4">
       <div>
@@ -516,14 +558,17 @@ function FixedForm({ initial, onSave, onDelete }) {
         <div className="field-label">Amount per month</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '10px 14px', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--surface)' }}>
           <span className="muted serif" style={{ fontSize: 22 }}>{sym}</span>
-          <input type="number" step="0.01" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
+          <input type="number" step="0.01" inputMode="decimal"
+            value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
             style={{ flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: 22, color: 'var(--ink)', padding: 0, fontFamily: '"Instrument Serif", serif' }} />
         </div>
       </div>
       <div>
         <div className="field-label">Category</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {store.state.categories.map(c => <CategoryChip key={c.id} cat={c} selected={category === c.id} onClick={() => setCategory(c.id)} />)}
+          {store.state.categories.map(c => (
+            <CategoryChip key={c.id} cat={c} selected={category === c.id} onClick={() => setCategory(c.id)} />
+          ))}
         </div>
       </div>
       <div className="row gap-2">
@@ -538,14 +583,12 @@ function FixedForm({ initial, onSave, onDelete }) {
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────
-const CATEGORY_ICONS = ['shop', 'fork', 'car', 'bag', 'film', 'heart', 'bolt', 'dots', 'wallet', 'calendar']
-const CATEGORY_COLORS = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)', 'var(--cat-4)', 'var(--cat-5)', 'var(--cat-6)', 'var(--cat-7)', 'var(--cat-8)']
-
 export function SettingsScreen() {
   const store = useStore()
   const s = store.state.settings
   const [budgetDraft, setBudgetDraft] = React.useState(String(s.budget))
   const [editingCat, setEditingCat] = React.useState(null)
+
   React.useEffect(() => { setBudgetDraft(String(s.budget)) }, [s.budget])
 
   return (
@@ -567,7 +610,9 @@ export function SettingsScreen() {
           </div>
           <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Updates the progress ring on the homepage.</div>
         </div>
+
         <hr className="hr" />
+
         <div>
           <div className="field-label">Currency</div>
           <select className="select" value={s.currency} onChange={e => {
@@ -585,7 +630,9 @@ export function SettingsScreen() {
             <option value="AUD">AUD (A$)</option>
           </select>
         </div>
+
         <hr className="hr" />
+
         <div className="between">
           <div>
             <div style={{ fontSize: 14, fontWeight: 500 }}>Include fixed in monthly total</div>
@@ -593,7 +640,9 @@ export function SettingsScreen() {
           </div>
           <Switch on={s.includeFixedInTotal} onChange={v => store.setSetting('includeFixedInTotal', v)} />
         </div>
+
         <hr className="hr" />
+
         <div className="between">
           <div>
             <div style={{ fontSize: 14, fontWeight: 500 }}>Dark mode</div>
@@ -615,10 +664,11 @@ export function SettingsScreen() {
         </div>
         <div>
           {store.state.categories.map(c => {
-            const usage = store.state.expenses.filter(e => e.category === c.id).length + store.state.fixed.filter(f => f.category === c.id).length
+            const usage = store.state.expenses.filter(e => e.category === c.id).length +
+              store.state.fixed.filter(f => f.category === c.id).length
             return (
-              <button key={c.id} className="lrow" onClick={() => setEditingCat(c.id)}
-                style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left', padding: '12px 0', cursor: 'pointer' }}>
+              <button key={c.id} onClick={() => setEditingCat(c.id)}
+                style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left', padding: '12px 0', cursor: 'pointer', display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center' }}>
                 <div className="ic" style={{ background: 'color-mix(in oklab, ' + c.color + ' 15%, var(--surface))' }}>
                   <Icon name={c.icon} size={15} color={c.color} />
                 </div>
@@ -633,13 +683,18 @@ export function SettingsScreen() {
         </div>
       </div>
 
-      <Sheet open={!!editingCat} onClose={() => setEditingCat(null)} title={editingCat === 'new' ? 'New category' : 'Edit category'}>
+      <Sheet open={!!editingCat} onClose={() => setEditingCat(null)}
+        title={editingCat === 'new' ? 'New category' : 'Edit category'}>
         <CategoryForm
           initial={editingCat && editingCat !== 'new' ? store.state.categories.find(c => c.id === editingCat) : null}
           canDelete={store.state.categories.length > 1}
-          onSave={data => { if (editingCat === 'new') store.addCategory(data); else store.updateCategory(editingCat, data); setEditingCat(null) }}
+          onSave={data => {
+            if (editingCat === 'new') store.addCategory(data); else store.updateCategory(editingCat, data)
+            setEditingCat(null)
+          }}
           onDelete={() => {
-            const usage = store.state.expenses.filter(e => e.category === editingCat).length + store.state.fixed.filter(f => f.category === editingCat).length
+            const usage = store.state.expenses.filter(e => e.category === editingCat).length +
+              store.state.fixed.filter(f => f.category === editingCat).length
             const msg = usage > 0 ? `Delete this category? ${usage} item(s) will be reassigned.` : 'Delete this category?'
             if (confirm(msg)) { store.deleteCategory(editingCat); setEditingCat(null) }
           }} />
@@ -648,20 +703,28 @@ export function SettingsScreen() {
       <div className="card stack gap-3">
         <div>
           <div style={{ fontSize: 14, fontWeight: 500 }}>Data</div>
-          <div className="muted" style={{ fontSize: 12 }}>Stored in Supabase.</div>
+          <div className="muted" style={{ fontSize: 12 }}>Stored in your Supabase database.</div>
         </div>
         <div className="row gap-2" style={{ flexWrap: 'wrap' }}>
-          <button className="btn" onClick={() => { if (confirm('Clear all variable expenses?')) store.clearAll() }}>Clear expenses</button>
-          <button className="btn danger" onClick={() => { if (confirm('Reset to default categories and fixed expenses?')) store.resetAll() }}>Reset to defaults</button>
+          <button className="btn" onClick={() => {
+            if (confirm('Clear all variable expenses? Fixed expenses and budget remain.')) store.clearAll()
+          }}>Clear expenses</button>
+          <button className="btn danger" onClick={() => {
+            if (confirm('Reset everything to seeded sample data?')) store.resetAll()
+          }}>Reset to sample data</button>
         </div>
       </div>
 
       <div className="muted" style={{ fontSize: 12, textAlign: 'center', padding: '12px 0' }}>
-        Ledger · personal expenses · v2
+        Ledger · personal expenses · v1
       </div>
     </div>
   )
 }
+
+// ── Category form ─────────────────────────────────────────────────────────────
+const CATEGORY_ICONS = ['shop', 'fork', 'car', 'bag', 'film', 'heart', 'bolt', 'dots', 'wallet', 'calendar']
+const CATEGORY_COLORS = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)', 'var(--cat-4)', 'var(--cat-5)', 'var(--cat-6)', 'var(--cat-7)', 'var(--cat-8)']
 
 function CategoryForm({ initial, canDelete, onSave, onDelete }) {
   const [label, setLabel] = React.useState(initial?.label || '')
@@ -681,13 +744,19 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
       <div>
         <div className="field-label">Color</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {CATEGORY_COLORS.map(c =>
+          {CATEGORY_COLORS.map(c => (
             <button key={c} type="button" onClick={() => setColor(c)}
-              style={{ width: 32, height: 32, borderRadius: '50%', background: c, cursor: 'pointer',
-                border: color === c ? '2px solid var(--ink)' : '2px solid transparent', outline: '1px solid var(--line)' }} />
-          )}
-          <label style={{ position: 'relative', width: 32, height: 32, borderRadius: '50%', background: customColor, cursor: 'pointer',
-            border: color === customColor ? '2px solid var(--ink)' : '2px solid transparent', outline: '1px dashed var(--line-2)', display: 'grid', placeItems: 'center' }}>
+              style={{ width: 32, height: 32, borderRadius: '50%', background: c,
+                border: color === c ? '2px solid var(--ink)' : '2px solid transparent',
+                outline: '1px solid var(--line)', cursor: 'pointer' }} />
+          ))}
+          <label style={{
+            position: 'relative', width: 32, height: 32, borderRadius: '50%',
+            background: customColor,
+            border: color === customColor ? '2px solid var(--ink)' : '2px solid transparent',
+            outline: '1px dashed var(--line-2)', cursor: 'pointer',
+            display: 'grid', placeItems: 'center',
+          }}>
             {color !== customColor && <Icon name="plus" size={14} color="var(--ink-2)" />}
             <input type="color" value={customColor}
               onChange={e => { setCustomColor(e.target.value); setColor(e.target.value) }}
@@ -699,15 +768,16 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
       <div>
         <div className="field-label">Icon</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {CATEGORY_ICONS.map(name =>
+          {CATEGORY_ICONS.map(name => (
             <button key={name} type="button" onClick={() => setIcon(name)}
-              style={{ width: 40, height: 40, borderRadius: 10, cursor: 'pointer', display: 'grid', placeItems: 'center',
+              style={{ width: 40, height: 40, borderRadius: 10,
                 background: icon === name ? 'var(--ink)' : 'var(--surface)',
                 color: icon === name ? 'var(--bg)' : 'var(--ink-2)',
-                border: '1px solid ' + (icon === name ? 'var(--ink)' : 'var(--line)') }}>
+                border: '1px solid ' + (icon === name ? 'var(--ink)' : 'var(--line)'),
+                display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
               <Icon name={name} size={16} color="currentColor" />
             </button>
-          )}
+          ))}
         </div>
       </div>
       <div className="row gap-2">
@@ -715,7 +785,11 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
           onClick={() => valid && onSave({ label: label.trim(), icon, color })}>
           {initial ? 'Save changes' : 'Add category'}
         </button>
-        {initial && canDelete && <button className="btn danger" style={{ flex: '0 0 auto' }} onClick={onDelete}><Icon name="trash" size={16} /></button>}
+        {initial && canDelete && (
+          <button className="btn danger" style={{ flex: '0 0 auto' }} onClick={onDelete}>
+            <Icon name="trash" size={16} />
+          </button>
+        )}
       </div>
     </div>
   )
