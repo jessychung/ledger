@@ -133,6 +133,9 @@ export function StoreProvider({ children }) {
       supabase.from('fixed_expenses').select('*'),
       supabase.from('expenses').select('*').order('date', { ascending: false }),
     ])
+    if (!settingsRow) {
+      await supabase.from('settings').upsert({ id: 1, budget: 2400, currency: 'USD', currency_symbol: '$', include_fixed_in_total: true, dark_mode: false })
+    }
     setState({
       loading: false,
       settings: settingsRow ? rowToSettings(settingsRow) : DEFAULT_SETTINGS,
@@ -193,13 +196,13 @@ export function StoreProvider({ children }) {
         budget: 'budget', currency: 'currency', currencySymbol: 'currency_symbol',
         includeFixedInTotal: 'include_fixed_in_total', darkMode: 'dark_mode',
       }
-      if (colMap[key]) await supabase.from('settings').update({ [colMap[key]]: value }).eq('id', 1)
+      if (colMap[key]) await supabase.from('settings').upsert({ id: 1, [colMap[key]]: value })
     },
 
     setBudget(n) {
       const v = Number(n) || 0
       setState(s => ({ ...s, settings: { ...s.settings, budget: v } }))
-      supabase.from('settings').update({ budget: v }).eq('id', 1)
+      supabase.from('settings').upsert({ id: 1, budget: v })
     },
 
     async addCategory(c) {
@@ -207,17 +210,23 @@ export function StoreProvider({ children }) {
       const id = (c.label || 'cat').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + uid().slice(0, 4)
       const newCat = { id, icon: 'dots', color: 'var(--cat-8)', subcategories: [], ...c }
       setState(s => ({ ...s, categories: [...s.categories, newCat] }))
-      await supabase.from('categories').insert({ id: newCat.id, label: newCat.label, icon: newCat.icon, color: newCat.color, sort_order: sortOrder, subcategories: newCat.subcategories })
+      const base = { id: newCat.id, label: newCat.label, icon: newCat.icon, color: newCat.color, sort_order: sortOrder }
+      const { error } = await supabase.from('categories').insert({ ...base, subcategories: newCat.subcategories })
+      if (error) await supabase.from('categories').insert(base)
     },
 
     async updateCategory(id, patch) {
       setState(s => ({ ...s, categories: s.categories.map(c => c.id === id ? { ...c, ...patch } : c) }))
       const row = {}
-      if (patch.label         !== undefined) row.label         = patch.label
-      if (patch.icon          !== undefined) row.icon          = patch.icon
-      if (patch.color         !== undefined) row.color         = patch.color
+      if (patch.label !== undefined) row.label = patch.label
+      if (patch.icon  !== undefined) row.icon  = patch.icon
+      if (patch.color !== undefined) row.color = patch.color
       if (patch.subcategories !== undefined) row.subcategories = patch.subcategories
-      await supabase.from('categories').update(row).eq('id', id)
+      const { error } = await supabase.from('categories').update(row).eq('id', id)
+      if (error && patch.subcategories !== undefined) {
+        const { subcategories: _, ...rowWithout } = row
+        if (Object.keys(rowWithout).length) await supabase.from('categories').update(rowWithout).eq('id', id)
+      }
     },
 
     async deleteCategory(id) {
