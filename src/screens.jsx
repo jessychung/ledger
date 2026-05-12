@@ -414,6 +414,7 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
   const store = useStore()
   const [amount, setAmount] = React.useState(initial?.amount ? String(initial.amount) : '')
   const [category, setCategory] = React.useState(initial?.category || store.state.categories[0]?.id || 'groceries')
+  const [subcategory, setSubcategory] = React.useState(initial?.subcategory || '')
   const [note, setNote] = React.useState(initial?.note || '')
   const [date, setDate] = React.useState(
     initial?.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
@@ -422,10 +423,16 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
   const sym = store.state.settings.currencySymbol
   const numAmount = parseFloat(amount)
   const valid = !isNaN(numAmount) && numAmount > 0
+  const activeCat = store.state.categories.find(c => c.id === category)
+  const subs = activeCat?.subcategories || []
+
+  React.useEffect(() => {
+    if (!subs.includes(subcategory)) setSubcategory('')
+  }, [category])
 
   function submit() {
     if (!valid) return
-    onSave({ amount: Math.round(numAmount * 100) / 100, category, note: note.trim(), date: new Date(date + 'T12:00:00').toISOString() })
+    onSave({ amount: Math.round(numAmount * 100) / 100, category, subcategory, note: note.trim(), date: new Date(date + 'T12:00:00').toISOString() })
   }
 
   return (
@@ -449,6 +456,26 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
           ))}
         </div>
       </div>
+
+      {subs.length > 0 && (
+        <div>
+          <div className="field-label">Subcategory</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {subs.map(s => (
+              <button key={s} type="button" onClick={() => setSubcategory(subcategory === s ? '' : s)}
+                style={{
+                  padding: '8px 14px', borderRadius: 999, fontSize: 13, cursor: 'pointer',
+                  border: '1px solid ' + (subcategory === s ? 'var(--ink)' : 'var(--line)'),
+                  background: subcategory === s ? 'var(--ink)' : 'var(--surface)',
+                  color: subcategory === s ? 'var(--bg)' : 'var(--ink-2)',
+                  transition: 'all 160ms',
+                }}>
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <div className="field-label">Date</div>
@@ -726,6 +753,32 @@ export function SettingsScreen() {
 const CATEGORY_ICONS = ['shop', 'fork', 'car', 'bag', 'film', 'heart', 'bolt', 'dots', 'wallet', 'calendar']
 const CATEGORY_COLORS = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)', 'var(--cat-4)', 'var(--cat-5)', 'var(--cat-6)', 'var(--cat-7)', 'var(--cat-8)']
 
+async function generateIconPaths(label) {
+  const key = import.meta.env.VITE_ANTHROPIC_API_KEY
+  if (!key) throw new Error('no key')
+  const prompt = `Design a minimal line icon (Lucide/Feather style) for an expense category called "${label.trim()}".
+Return ONLY valid JSON in this exact shape, no prose, no markdown:
+{"paths": ["M...", "M..."]}
+Rules: 1-3 SVG path "d" strings for a 24x24 viewBox. Stroke-only, no fill. Simple paths under 12 commands each. Centered with ~2px padding.`
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 256, messages: [{ role: 'user', content: prompt }] }),
+  })
+  const data = await res.json()
+  const text = data.content?.[0]?.text || ''
+  const m = text.match(/\{[\s\S]*\}/)
+  if (!m) throw new Error('no json')
+  const obj = JSON.parse(m[0])
+  if (!obj.paths?.length) throw new Error('no paths')
+  return 'svg:' + obj.paths.join('|')
+}
+
 function CategoryForm({ initial, canDelete, onSave, onDelete }) {
   const [label, setLabel] = React.useState(initial?.label || '')
   const [icon, setIcon] = React.useState(initial?.icon || 'dots')
@@ -733,7 +786,33 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
   const [customColor, setCustomColor] = React.useState(() =>
     initial?.color && !initial.color.startsWith('var(') ? initial.color : '#7a8770'
   )
+  const [subcategories, setSubcategories] = React.useState(initial?.subcategories || [])
+  const [subInput, setSubInput] = React.useState('')
+  const [genState, setGenState] = React.useState('idle')
+  const [customIcons, setCustomIcons] = React.useState(() =>
+    initial?.icon?.startsWith('svg:') ? [initial.icon] : []
+  )
   const valid = label.trim().length > 0
+
+  function addSub() {
+    const v = subInput.trim()
+    if (v && !subcategories.includes(v)) setSubcategories(s => [...s, v])
+    setSubInput('')
+  }
+
+  async function handleGenerate() {
+    if (!label.trim() || genState === 'loading') return
+    setGenState('loading')
+    try {
+      const enc = await generateIconPaths(label)
+      setCustomIcons(prev => [...prev, enc].slice(-4))
+      setIcon(enc)
+      setGenState('idle')
+    } catch {
+      setGenState('error')
+      setTimeout(() => setGenState('idle'), 2000)
+    }
+  }
 
   return (
     <div className="stack gap-4">
@@ -766,23 +845,66 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
         </div>
       </div>
       <div>
-        <div className="field-label">Icon</div>
+        <div className="between" style={{ marginBottom: 6 }}>
+          <div className="field-label" style={{ marginBottom: 0 }}>Icon</div>
+          <button type="button" onClick={handleGenerate}
+            disabled={!label.trim() || genState === 'loading'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'transparent', border: '1px solid var(--line)',
+              padding: '4px 10px', borderRadius: 999,
+              color: label.trim() ? 'var(--accent)' : 'var(--muted-2)',
+              fontSize: 12, fontWeight: 500, cursor: label.trim() ? 'pointer' : 'not-allowed',
+              opacity: genState === 'loading' ? 0.6 : 1,
+            }}>
+            <Icon name="sparkle" size={12} />
+            {genState === 'loading' ? 'Generating…' : genState === 'error' ? 'Try again' : 'Generate'}
+          </button>
+        </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {CATEGORY_ICONS.map(name => (
-            <button key={name} type="button" onClick={() => setIcon(name)}
+          {[...CATEGORY_ICONS, ...customIcons].map((name, i) => (
+            <button key={name + i} type="button" onClick={() => setIcon(name)}
               style={{ width: 40, height: 40, borderRadius: 10,
                 background: icon === name ? 'var(--ink)' : 'var(--surface)',
                 color: icon === name ? 'var(--bg)' : 'var(--ink-2)',
-                border: '1px solid ' + (icon === name ? 'var(--ink)' : 'var(--line)'),
-                display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+                border: '1px solid ' + (icon === name ? 'var(--ink)' : name.startsWith('svg:') ? 'var(--accent)' : 'var(--line)'),
+                display: 'grid', placeItems: 'center', cursor: 'pointer', position: 'relative' }}>
               <Icon name={name} size={16} color="currentColor" />
             </button>
           ))}
         </div>
+        {genState === 'error' && (
+          <div style={{ fontSize: 12, color: 'var(--alert)', marginTop: 6 }}>
+            {import.meta.env.VITE_ANTHROPIC_API_KEY ? "Couldn't generate — try again." : 'Add VITE_ANTHROPIC_API_KEY to Vercel to enable.'}
+          </div>
+        )}
       </div>
+
+      <div>
+        <div className="field-label">Subcategories</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: subcategories.length ? 10 : 0 }}>
+          {subcategories.map(s => (
+            <button key={s} type="button"
+              onClick={() => setSubcategories(prev => prev.filter(x => x !== s))}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid var(--line)', background: 'var(--surface)', fontSize: 13, cursor: 'pointer' }}>
+              {s}
+              <span style={{ fontSize: 16, lineHeight: 1, color: 'var(--muted)' }}>+</span>
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input className="input" placeholder="e.g. Breakfast"
+            value={subInput} onChange={e => setSubInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addSub()}
+            style={{ flex: 1 }} />
+          <button className="btn" onClick={addSub} disabled={!subInput.trim()}
+            style={{ flex: '0 0 auto', opacity: subInput.trim() ? 1 : 0.4 }}>Add</button>
+        </div>
+      </div>
+
       <div className="row gap-2">
         <button className="btn primary" disabled={!valid} style={{ opacity: valid ? 1 : 0.4, flex: 1 }}
-          onClick={() => valid && onSave({ label: label.trim(), icon, color })}>
+          onClick={() => valid && onSave({ label: label.trim(), icon, color, subcategories })}>
           {initial ? 'Save changes' : 'Add category'}
         </button>
         {initial && canDelete && (

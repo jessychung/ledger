@@ -89,7 +89,7 @@ const DEFAULT_SETTINGS = {
 }
 
 function rowToExpense(r) {
-  return { id: r.id, date: r.date, amount: Number(r.amount), category: r.category_id, note: r.note || '' }
+  return { id: r.id, date: r.date, amount: Number(r.amount), category: r.category_id, note: r.note || '', subcategory: r.subcategory || '' }
 }
 
 function rowToFixed(r) {
@@ -97,7 +97,7 @@ function rowToFixed(r) {
 }
 
 function rowToCategory(r) {
-  return { id: r.id, label: r.label, icon: r.icon, color: r.color }
+  return { id: r.id, label: r.label, icon: r.icon, color: r.color, subcategories: r.subcategories || [] }
 }
 
 function rowToSettings(r) {
@@ -148,16 +148,17 @@ export function StoreProvider({ children }) {
     async addExpense(e) {
       const id = uid()
       setState(s => ({ ...s, expenses: [{ ...e, id }, ...s.expenses] }))
-      await supabase.from('expenses').insert({ id, date: e.date, amount: e.amount, category_id: e.category, note: e.note || null })
+      await supabase.from('expenses').insert({ id, date: e.date, amount: e.amount, category_id: e.category, note: e.note || null, subcategory: e.subcategory || null })
     },
 
     async updateExpense(id, patch) {
       setState(s => ({ ...s, expenses: s.expenses.map(e => e.id === id ? { ...e, ...patch } : e) }))
       const row = {}
-      if (patch.amount  !== undefined) row.amount      = patch.amount
-      if (patch.category !== undefined) row.category_id = patch.category
-      if (patch.note    !== undefined) row.note        = patch.note
-      if (patch.date    !== undefined) row.date        = patch.date
+      if (patch.amount      !== undefined) row.amount      = patch.amount
+      if (patch.category    !== undefined) row.category_id = patch.category
+      if (patch.note        !== undefined) row.note        = patch.note
+      if (patch.date        !== undefined) row.date        = patch.date
+      if (patch.subcategory !== undefined) row.subcategory = patch.subcategory || null
       await supabase.from('expenses').update(row).eq('id', id)
     },
 
@@ -204,17 +205,18 @@ export function StoreProvider({ children }) {
     async addCategory(c) {
       const sortOrder = state.categories.length
       const id = (c.label || 'cat').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + uid().slice(0, 4)
-      const newCat = { id, icon: 'dots', color: 'var(--cat-8)', ...c }
+      const newCat = { id, icon: 'dots', color: 'var(--cat-8)', subcategories: [], ...c }
       setState(s => ({ ...s, categories: [...s.categories, newCat] }))
-      await supabase.from('categories').insert({ id: newCat.id, label: newCat.label, icon: newCat.icon, color: newCat.color, sort_order: sortOrder })
+      await supabase.from('categories').insert({ id: newCat.id, label: newCat.label, icon: newCat.icon, color: newCat.color, sort_order: sortOrder, subcategories: newCat.subcategories })
     },
 
     async updateCategory(id, patch) {
       setState(s => ({ ...s, categories: s.categories.map(c => c.id === id ? { ...c, ...patch } : c) }))
       const row = {}
-      if (patch.label !== undefined) row.label = patch.label
-      if (patch.icon  !== undefined) row.icon  = patch.icon
-      if (patch.color !== undefined) row.color = patch.color
+      if (patch.label         !== undefined) row.label         = patch.label
+      if (patch.icon          !== undefined) row.icon          = patch.icon
+      if (patch.color         !== undefined) row.color         = patch.color
+      if (patch.subcategories !== undefined) row.subcategories = patch.subcategories
       await supabase.from('categories').update(row).eq('id', id)
     },
 
