@@ -531,8 +531,8 @@ export function FixedScreen() {
         {store.state.fixed.map(f => {
           const cat = store.catById(f.category)
           return (
-            <button key={f.id} onClick={() => setEditing(f.id)}
-              style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left', padding: '12px 0', cursor: 'pointer', display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center' }}>
+            <button key={f.id} className="lrow" onClick={() => setEditing(f.id)}
+              style={{ background: 'none', border: 0, width: '100%', textAlign: 'left', cursor: 'pointer' }}>
               <div className="ic" style={{ background: 'color-mix(in oklab, ' + cat.color + ' 15%, var(--surface))' }}>
                 <Icon name={cat.icon} size={15} color={cat.color} />
               </div>
@@ -540,7 +540,7 @@ export function FixedScreen() {
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</div>
                 <div className="meta">{cat.label} · monthly</div>
               </div>
-              <div style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+              <div className="amt">
                 {sym}{hasCents(store.state.settings.currency) ? f.amount.toFixed(2) : Math.round(f.amount).toLocaleString()}
               </div>
             </button>
@@ -694,8 +694,8 @@ export function SettingsScreen() {
             const usage = store.state.expenses.filter(e => e.category === c.id).length +
               store.state.fixed.filter(f => f.category === c.id).length
             return (
-              <button key={c.id} onClick={() => setEditingCat(c.id)}
-                style={{ background: 'none', border: 0, borderBottom: '1px solid var(--line)', width: '100%', textAlign: 'left', padding: '12px 0', cursor: 'pointer', display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center' }}>
+              <button key={c.id} className="lrow" onClick={() => setEditingCat(c.id)}
+                style={{ background: 'none', border: 0, width: '100%', textAlign: 'left', cursor: 'pointer' }}>
                 <div className="ic" style={{ background: 'color-mix(in oklab, ' + c.color + ' 15%, var(--surface))' }}>
                   <Icon name={c.icon} size={15} color={c.color} />
                 </div>
