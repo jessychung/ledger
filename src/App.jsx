@@ -78,10 +78,6 @@ function App() {
     <div className={'app-grid' + (navCollapsed ? ' nav-collapsed' : '')}>
       {/* Sidebar (desktop) */}
       <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">L</div>
-          <span style={{ fontFamily: '"Instrument Serif", serif', fontSize: 18, fontStyle: 'italic' }}>Ledger</span>
-        </div>
         {sidebarTabs.map(t => (
           <button key={t.id}
             className={'nav-item' + (tab === t.id ? ' active' : '')}
@@ -108,13 +104,6 @@ function App() {
 
       {/* Main */}
       <main className="main">
-        {/* Mobile top bar */}
-        <div className="mtop mobile-only">
-          <div className="brand">
-            <div className="brand-mark">L</div>
-            <span style={{ fontFamily: '"Instrument Serif", serif', fontSize: 17, fontStyle: 'italic' }}>Ledger</span>
-          </div>
-        </div>
         {screen}
       </main>
 
