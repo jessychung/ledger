@@ -62,7 +62,7 @@ body {
 .serif { font-family: "Instrument Serif", "Times New Roman", serif; font-weight: 400; }
 .mono  { font-family: "Geist Mono", ui-monospace, monospace; }
 
-button { font-family: inherit; cursor: pointer; }
+button { font-family: inherit; cursor: pointer; color: inherit; }
 input, textarea, select { font-family: inherit; color: inherit; }
 
 input[type=number]::-webkit-outer-spin-button,
