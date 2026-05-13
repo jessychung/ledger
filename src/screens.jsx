@@ -904,9 +904,11 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
   const [label, setLabel] = React.useState(initial?.label || '')
   const [icon, setIcon] = React.useState(initial?.icon || 'dots')
   const [color, setColor] = React.useState(initial?.color || 'var(--cat-1)')
-  const [customColor, setCustomColor] = React.useState(() =>
-    initial?.color && !initial.color.startsWith('var(') ? initial.color : '#7a8770'
+  const [customColors, setCustomColors] = React.useState(() =>
+    initial?.color && !initial.color.startsWith('var(') ? [initial.color] : []
   )
+  const [contextMenu, setContextMenu] = React.useState(null) // { x, y, color }
+  const colorPickerRef = React.useRef(null)
   const [subcategories, setSubcategories] = React.useState(initial?.subcategories || [])
   const [subInput, setSubInput] = React.useState('')
   const [genState, setGenState] = React.useState('idle')
@@ -914,6 +916,17 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
     initial?.icon?.startsWith('svg:') ? [initial.icon] : []
   )
   const valid = label.trim().length > 0
+
+  React.useEffect(() => {
+    if (!contextMenu) return
+    function dismiss(e) {
+      if (e.type === 'keydown' && e.key !== 'Escape') return
+      setContextMenu(null)
+    }
+    document.addEventListener('mousedown', dismiss)
+    document.addEventListener('keydown', dismiss)
+    return () => { document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', dismiss) }
+  }, [contextMenu])
 
   function addSub() {
     const v = subInput.trim()
@@ -943,26 +956,55 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
       </div>
       <div>
         <div className="field-label">Color</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {CATEGORY_COLORS.map(c => (
             <button key={c} type="button" onClick={() => setColor(c)}
               style={{ width: 32, height: 32, borderRadius: '50%', background: c,
                 border: color === c ? '2px solid var(--ink)' : '2px solid transparent',
                 outline: '1px solid var(--line)', cursor: 'pointer' }} />
           ))}
-          <label style={{
-            position: 'relative', width: 32, height: 32, borderRadius: '50%',
-            background: customColor,
-            border: color === customColor ? '2px solid var(--ink)' : '2px solid transparent',
-            outline: '1px dashed var(--line-2)', cursor: 'pointer',
-            display: 'grid', placeItems: 'center',
-          }}>
-            {color !== customColor && <Icon name="plus" size={14} color="var(--ink-2)" />}
-            <input type="color" value={customColor}
-              onChange={e => { setCustomColor(e.target.value); setColor(e.target.value) }}
-              onClick={() => setColor(customColor)}
-              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
-          </label>
+          {customColors.map(c => (
+            <button key={c} type="button"
+              onClick={() => setColor(c)}
+              onContextMenu={e => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, color: c }) }}
+              style={{ width: 32, height: 32, borderRadius: '50%', background: c,
+                border: color === c ? '2px solid var(--ink)' : '2px solid transparent',
+                outline: '1px solid var(--line)', cursor: 'pointer' }} />
+          ))}
+          {/* + button to add custom color */}
+          <button type="button"
+            onClick={() => colorPickerRef.current?.click()}
+            style={{ width: 32, height: 32, borderRadius: '50%', background: 'transparent',
+              border: '2px dashed var(--line-2)', cursor: 'pointer',
+              display: 'grid', placeItems: 'center' }}>
+            <Icon name="plus" size={14} color="var(--muted)" />
+          </button>
+          <input ref={colorPickerRef} type="color" defaultValue="#7a8770"
+            onChange={e => {
+              const c = e.target.value
+              setCustomColors(prev => prev.includes(c) ? prev : [...prev, c])
+              setColor(c)
+            }}
+            style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }} />
+          {/* Context menu for custom colors */}
+          {contextMenu && (
+            <div onMouseDown={e => e.stopPropagation()}
+              style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999,
+                background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8,
+                boxShadow: '0 4px 16px rgba(0,0,0,.18)', padding: '4px 0', minWidth: 140 }}>
+              <button type="button"
+                onClick={() => {
+                  setCustomColors(prev => prev.filter(x => x !== contextMenu.color))
+                  if (color === contextMenu.color) setColor(CATEGORY_COLORS[0])
+                  setContextMenu(null)
+                }}
+                style={{ width: '100%', padding: '8px 14px', textAlign: 'left',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: 'var(--red)', fontSize: 13 }}>
+                Remove color
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div>
