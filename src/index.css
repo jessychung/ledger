@@ -57,6 +57,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 .serif { font-family: "Instrument Serif", "Times New Roman", serif; font-weight: 400; }
@@ -213,7 +214,8 @@ input[type=number] { -moz-appearance: textfield; }
 .num-hero .cents { font-size: 0.42em; color: var(--muted); margin-left: 2px; vertical-align: 0.5em; letter-spacing: 0; }
 .num-hero .cur   { font-size: 0.42em; color: var(--muted); vertical-align: 0.55em; letter-spacing: 0; margin-right: 2px; }
 @media (max-width: 860px) { .num-hero { font-size: 68px; } }
-@media (max-width: 420px) { .num-hero { font-size: 52px; } }
+@media (max-width: 560px) { .num-hero { font-size: 54px; } }
+@media (max-width: 390px) { .num-hero { font-size: 46px; } }
 
 .pill {
   display: inline-flex; align-items: center; gap: 6px;

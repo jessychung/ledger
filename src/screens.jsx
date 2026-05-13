@@ -83,7 +83,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
       </div>
 
       {/* Hero card */}
-      <div className="card" style={{ padding: 28 }}>
+      <div className="card hero-card" style={{ padding: 28 }}>
         <div className="hero-card-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 28, alignItems: 'center' }}>
           <div className="stack gap-3">
             <div className="label-eyebrow">{activeMonth === nowMonthKey() ? 'Spent so far' : 'Spent'}</div>
@@ -218,12 +218,11 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           .hero-ring svg { width: 130px !important; height: 130px !important; }
           .brk-inner { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 420px) {
-          .hero-card-grid { grid-template-columns: 1fr !important; }
-          .hero-ring { display: flex; justify-content: center; margin-top: 4px; }
-          .hero-ring svg { width: 100px !important; height: 100px !important; }
-          .hero-ring > div { font-size: 22px !important; }
-          .card { padding: 16px !important; }
+        @media (max-width: 560px) {
+          .hero-card { padding: 20px !important; }
+          .hero-card-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .hero-ring { justify-self: center; }
+          .hero-ring svg { width: 120px !important; height: 120px !important; }
         }
       `}</style>
     </div>
