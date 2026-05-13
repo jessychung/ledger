@@ -228,6 +228,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
   }, [store.state.expenses])
 
   const items = expensesForMonth(store.state, mk, store.state.settings.includeFixedInTotal)
+    .filter(e => !e.fixed)
     .filter(e => catFilter === 'all' || e.category === catFilter)
     .filter(e => !search || (e.note || '').toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => new Date(b.date) - new Date(a.date))
