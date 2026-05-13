@@ -892,6 +892,10 @@ Rules: 1-3 SVG path "d" strings for a 24x24 viewBox. Stroke-only, no fill. Simpl
     },
     body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 256, messages: [{ role: 'user', content: prompt }] }),
   })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error?.message || `API ${res.status}`)
+  }
   const data = await res.json()
   const text = data.content?.[0]?.text || ''
   const m = text.match(/\{[\s\S]*\}/)
@@ -944,7 +948,8 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
       setCustomIcons(prev => [...prev, enc].slice(-4))
       setIcon(enc)
       setGenState('idle')
-    } catch {
+    } catch (e) {
+      console.error('Icon generation failed:', e)
       setGenState('error')
       setTimeout(() => setGenState('idle'), 2000)
     }
