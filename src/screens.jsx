@@ -331,8 +331,11 @@ export function TrendsScreen() {
   const sym = store.state.settings.currencySymbol
   const budget = store.state.settings.budget
   const includeFixed = store.state.settings.includeFixedInTotal
+  const [period, setPeriod] = React.useState('monthly')
   const [activeMonth, setActiveMonth] = React.useState(nowMonthKey())
+  const [activeDay, setActiveDay] = React.useState(null)
 
+  // ── Monthly data ──────────────────────────────────────────────────────────
   const trendMonths = React.useMemo(() => {
     const arr = []
     const now = new Date()
@@ -347,95 +350,190 @@ export function TrendsScreen() {
   const trendValues = trendMonths.map(m => totals[m] || 0)
   const avg = trendValues.reduce((s, v) => s + v, 0) / trendValues.length
   const peak = Math.max(...trendValues)
+  const activeTotal = trendValues[trendMonths.indexOf(activeMonth)] || 0
 
   const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
   const breakdownData = store.state.categories
     .map(c => ({ key: c.id, label: c.label, color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
-  const activeTotal = trendValues[trendMonths.indexOf(activeMonth)] || 0
+
+  // ── Daily data ────────────────────────────────────────────────────────────
+  const { dayKeys, dayValues, dayLabels } = React.useMemo(() => {
+    const [y, mo] = activeMonth.split('-').map(Number)
+    const daysInMonth = new Date(y, mo, 0).getDate()
+    const keys = [], values = [], labels = []
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = activeMonth + '-' + String(d).padStart(2, '0')
+      keys.push(key)
+      labels.push(String(d))
+      const total = store.state.expenses
+        .filter(e => !e.fixed && e.date.startsWith(key))
+        .reduce((s, e) => s + e.amount, 0)
+      values.push(total)
+    }
+    return { dayKeys: keys, dayValues: values, dayLabels: labels }
+  }, [activeMonth, store.state.expenses])
+
+  const dailyAvg = dayValues.reduce((s, v) => s + v, 0) / dayValues.filter(v => v > 0).length || 0
+  const dailyPeak = Math.max(...dayValues)
+
+  const effectiveDay = activeDay || dayKeys[dayKeys.length - 1]
+  const dayTotal = dayValues[dayKeys.indexOf(effectiveDay)] || 0
+  const dayBreakdown = React.useMemo(() => {
+    const items = store.state.expenses.filter(e => !e.fixed && e.date.startsWith(effectiveDay))
+    const byCategory = {}
+    items.forEach(e => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount })
+    return store.state.categories
+      .map(c => ({ key: c.id, label: c.label, color: c.color, icon: c.icon, value: byCategory[c.id] || 0 }))
+      .filter(d => d.value > 0)
+      .sort((a, b) => b.value - a.value)
+  }, [effectiveDay, store.state.expenses, store.state.categories])
+
+  const fmtDay = key => {
+    if (!key) return ''
+    const d = new Date(key + 'T12:00:00')
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  }
 
   return (
     <div className="stack gap-5">
-      <div>
-        <div className="label-eyebrow">Trends</div>
-        <h2 className="h1" style={{ marginTop: 4 }}>Last 6 months</h2>
+      <div className="between">
+        <div>
+          <div className="label-eyebrow">Trends</div>
+          <h2 className="h1" style={{ marginTop: 4 }}>{period === 'monthly' ? 'Last 6 months' : monthLabel(activeMonth)}</h2>
+        </div>
+        <div className="seg">
+          <button className={period === 'monthly' ? 'active' : ''} onClick={() => setPeriod('monthly')}>Monthly</button>
+          <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>Daily</button>
+        </div>
       </div>
 
-      <div className="card">
-        <div className="between" style={{ marginBottom: 14 }}>
-          <div>
-            <h3 className="h3">Monthly spending</h3>
-            <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Tap a bar to see breakdown</div>
+      {period === 'monthly' ? (<>
+        <div className="card">
+          <div className="between" style={{ marginBottom: 14 }}>
+            <div>
+              <h3 className="h3">Monthly spending</h3>
+              <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Tap a bar to see breakdown</div>
+            </div>
+            {budget > 0 && (
+              <div className="muted mono" style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 14, height: 1, background: 'var(--muted-2)', display: 'inline-block' }} />
+                budget {sym}{budget.toLocaleString()}
+              </div>
+            )}
           </div>
-          {budget > 0 && (
-            <div className="muted mono" style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 14, height: 1, background: 'var(--muted-2)', display: 'inline-block' }} />
-              budget {sym}{budget.toLocaleString()}
-            </div>
-          )}
+          <div style={{ position: 'relative' }}>
+            <MonthBars months={trendMonths} values={trendValues} budget={budget}
+              currencySym={sym} activeKey={activeMonth} onPick={setActiveMonth} />
+            {budget > 0 && (() => {
+              const max = Math.max(...trendValues, budget, 1)
+              return (
+                <div style={{
+                  position: 'absolute', left: 0, right: 0,
+                  top: 28 + (1 - budget / max) * 130,
+                  height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none',
+                }} />
+              )
+            })()}
+          </div>
         </div>
-        <div style={{ position: 'relative' }}>
-          <MonthBars months={trendMonths} values={trendValues} budget={budget}
-            currencySym={sym} activeKey={activeMonth} onPick={setActiveMonth} />
-          {budget > 0 && (() => {
-            const max = Math.max(...trendValues, budget, 1)
-            return (
-              <div style={{
-                position: 'absolute', left: 0, right: 0,
-                top: 28 + (1 - budget / max) * 130,
-                height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none',
-              }} />
-            )
-          })()}
-        </div>
-      </div>
 
-      <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        <div className="stat">
-          <div className="k">Average</div>
-          <div className="v">{sym}{Math.round(avg).toLocaleString()}</div>
+        <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div className="stat"><div className="k">Average</div><div className="v">{sym}{Math.round(avg).toLocaleString()}</div></div>
+          <div className="stat"><div className="k">Peak</div><div className="v">{sym}{Math.round(peak).toLocaleString()}</div></div>
+          <div className="stat"><div className="k">Budget</div><div className="v">{budget > 0 ? sym + Math.round(budget).toLocaleString() : '—'}</div></div>
         </div>
-        <div className="stat">
-          <div className="k">Peak</div>
-          <div className="v">{sym}{Math.round(peak).toLocaleString()}</div>
-        </div>
-        <div className="stat">
-          <div className="k">Budget</div>
-          <div className="v">{budget > 0 ? sym + Math.round(budget).toLocaleString() : '—'}</div>
-        </div>
-      </div>
 
-      <div className="card">
-        <div className="between" style={{ marginBottom: 16 }}>
-          <h3 className="h3">{monthLabel(activeMonth)}</h3>
-          <span className="muted" style={{ fontSize: 13 }}>{sym}{Math.round(activeTotal).toLocaleString()}</span>
-        </div>
-        {breakdownData.length === 0
-          ? <div className="empty">No expenses this month.</div>
-          : <div className="stack gap-3">
-              {breakdownData.map(d => {
-                const frac = activeTotal > 0 ? d.value / activeTotal : 0
-                return (
-                  <div key={d.key} className="stack gap-2">
-                    <div className="between">
-                      <div className="row gap-2">
-                        <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
-                          <Icon name={d.icon} size={12} color={d.color} />
-                        </span>
-                        <span style={{ fontSize: 14 }}>{d.label}</span>
+        <div className="card">
+          <div className="between" style={{ marginBottom: 16 }}>
+            <h3 className="h3">{monthLabel(activeMonth)}</h3>
+            <span className="muted" style={{ fontSize: 13 }}>{sym}{Math.round(activeTotal).toLocaleString()}</span>
+          </div>
+          {breakdownData.length === 0
+            ? <div className="empty">No expenses this month.</div>
+            : <div className="stack gap-3">
+                {breakdownData.map(d => {
+                  const frac = activeTotal > 0 ? d.value / activeTotal : 0
+                  return (
+                    <div key={d.key} className="stack gap-2">
+                      <div className="between">
+                        <div className="row gap-2">
+                          <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
+                            <Icon name={d.icon} size={12} color={d.color} />
+                          </span>
+                          <span style={{ fontSize: 14 }}>{d.label}</span>
+                        </div>
+                        <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
                       </div>
-                      <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                      <div className="bar-track">
+                        <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
+                      </div>
                     </div>
-                    <div className="bar-track">
-                      <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+          }
+        </div>
+      </>) : (<>
+        {/* Month picker for daily view */}
+        <div className="seg" style={{ alignSelf: 'flex-start' }}>
+          {trendMonths.map(m => (
+            <button key={m} className={activeMonth === m ? 'active' : ''}
+              onClick={() => { setActiveMonth(m); setActiveDay(null) }}>
+              {monthShort(m)}
+            </button>
+          ))}
+        </div>
+
+        <div className="card">
+          <div className="between" style={{ marginBottom: 14 }}>
+            <div>
+              <h3 className="h3">Daily spending</h3>
+              <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Tap a bar to see breakdown</div>
             </div>
-        }
-      </div>
+          </div>
+          <MonthBars months={dayKeys} values={dayValues} labels={dayLabels}
+            currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} />
+        </div>
+
+        <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div className="stat"><div className="k">Daily avg</div><div className="v">{sym}{Math.round(dailyAvg).toLocaleString()}</div></div>
+          <div className="stat"><div className="k">Peak day</div><div className="v">{sym}{Math.round(dailyPeak).toLocaleString()}</div></div>
+          <div className="stat"><div className="k">Month total</div><div className="v">{sym}{Math.round(activeTotal).toLocaleString()}</div></div>
+        </div>
+
+        <div className="card">
+          <div className="between" style={{ marginBottom: 16 }}>
+            <h3 className="h3">{fmtDay(effectiveDay)}</h3>
+            <span className="muted" style={{ fontSize: 13 }}>{sym}{dayTotal.toFixed(0)}</span>
+          </div>
+          {dayBreakdown.length === 0
+            ? <div className="empty">No expenses this day.</div>
+            : <div className="stack gap-3">
+                {dayBreakdown.map(d => {
+                  const frac = dayTotal > 0 ? d.value / dayTotal : 0
+                  return (
+                    <div key={d.key} className="stack gap-2">
+                      <div className="between">
+                        <div className="row gap-2">
+                          <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
+                            <Icon name={d.icon} size={12} color={d.color} />
+                          </span>
+                          <span style={{ fontSize: 14 }}>{d.label}</span>
+                        </div>
+                        <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                      </div>
+                      <div className="bar-track">
+                        <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+          }
+        </div>
+      </>)}
     </div>
   )
 }

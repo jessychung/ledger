@@ -155,7 +155,7 @@ function fmtBarVal(n, sym) {
 }
 
 // ── Month bars ────────────────────────────────────────────────────────────────
-export function MonthBars({ months, values, budget, currencySym = '$', onPick, activeKey }) {
+export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey }) {
   const max = Math.max(...values, budget || 0, 1)
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap: 6, alignItems: 'end', height: 160, overflow: 'hidden' }}>
@@ -168,17 +168,17 @@ export function MonthBars({ months, values, budget, currencySym = '$', onPick, a
           <button key={mk} onClick={() => onPick && onPick(mk)}
             style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-              {fmtBarVal(v, currencySym)}
+              {v > 0 ? fmtBarVal(v, currencySym) : ''}
             </div>
             <div style={{
               width: '70%', maxWidth: 36, height: h,
               background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
               borderRadius: 4,
-              opacity: isActive ? 1 : 0.65,
+              opacity: isActive ? 1 : 0.35,
               transition: 'all 200ms',
             }} />
             <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              {monthShort(mk)}
+              {labels ? labels[i] : monthShort(mk)}
             </div>
           </button>
         )
