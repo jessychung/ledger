@@ -878,10 +878,19 @@ const CATEGORY_COLORS = ['var(--cat-1)', 'var(--cat-2)', 'var(--cat-3)', 'var(--
 async function generateIconPaths(label) {
   const key = import.meta.env.VITE_ANTHROPIC_API_KEY
   if (!key) throw new Error('no key')
-  const prompt = `Design a minimal line icon (Lucide/Feather style) for an expense category called "${label.trim()}".
-Return ONLY valid JSON in this exact shape, no prose, no markdown:
-{"paths": ["M...", "M..."]}
-Rules: 1-3 SVG path "d" strings for a 24x24 viewBox. Stroke-only, no fill. Simple paths under 12 commands each. Centered with ~2px padding.`
+  const prompt = `Create a Lucide-style SVG icon for the expense category "${label.trim()}".
+
+Think: what single everyday object or symbol best represents "${label.trim()}"? (e.g. "Coffee" → coffee cup, "Travel" → airplane, "Groceries" → shopping cart, "Rent" → house)
+
+Draw it using 1–3 SVG paths on a 24×24 grid (2px padding, so keep within x:2–22, y:2–22).
+Stroke-only, no fill. Use simple shapes:
+- Rect: M4 4 L20 4 L20 20 L4 20 Z
+- Rounded rect: M6 3 Q3 3 3 6 L3 18 Q3 21 6 21 L18 21 Q21 21 21 18 L21 6 Q21 3 18 3 Z
+- Circle r=7 at center: M12 5 A7 7 0 0 1 19 12 A7 7 0 0 1 12 19 A7 7 0 0 1 5 12 A7 7 0 0 1 12 5 Z
+- Line: M4 12 L20 12
+- Arc: M5 17 A9 9 0 0 1 19 17
+
+Return ONLY JSON, no explanation: {"paths": ["path1", "path2"]}`
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -890,7 +899,7 @@ Rules: 1-3 SVG path "d" strings for a 24x24 viewBox. Stroke-only, no fill. Simpl
       'anthropic-dangerous-direct-browser-access': 'true',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 256, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, messages: [{ role: 'user', content: prompt }] }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
