@@ -404,8 +404,8 @@ export function TrendsScreen() {
           <h2 className="h1" style={{ marginTop: 4 }}>{period === 'monthly' ? 'Last 6 months' : monthLabel(activeMonth)}</h2>
         </div>
         <div className="seg">
-          <button className={period === 'monthly' ? 'active' : ''} onClick={() => setPeriod('monthly')}>Monthly</button>
-          <button className={period === 'daily' ? 'active' : ''} onClick={() => setPeriod('daily')}>Daily</button>
+          <button className={period === 'monthly' ? 'on' : ''} onClick={() => setPeriod('monthly')}>Monthly</button>
+          <button className={period === 'daily' ? 'on' : ''} onClick={() => setPeriod('daily')}>Daily</button>
         </div>
       </div>
 
@@ -479,7 +479,7 @@ export function TrendsScreen() {
         {/* Month picker for daily view */}
         <div className="seg" style={{ alignSelf: 'flex-start' }}>
           {trendMonths.map(m => (
-            <button key={m} className={activeMonth === m ? 'active' : ''}
+            <button key={m} className={activeMonth === m ? 'on' : ''}
               onClick={() => { setActiveMonth(m); setActiveDay(null) }}>
               {monthShort(m)}
             </button>
