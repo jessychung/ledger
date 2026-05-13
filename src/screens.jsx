@@ -907,7 +907,8 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
   const [customColors, setCustomColors] = React.useState(() =>
     initial?.color && !initial.color.startsWith('var(') ? [initial.color] : []
   )
-  const [contextMenu, setContextMenu] = React.useState(null) // { x, y, color }
+  const [editingIdx, setEditingIdx] = React.useState(null)
+  const [contextMenu, setContextMenu] = React.useState(null) // { x, y, idx }
   const colorPickerRef = React.useRef(null)
   const [subcategories, setSubcategories] = React.useState(initial?.subcategories || [])
   const [subInput, setSubInput] = React.useState('')
@@ -963,28 +964,38 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
                 border: color === c ? '2px solid var(--ink)' : '2px solid transparent',
                 outline: '1px solid var(--line)', cursor: 'pointer' }} />
           ))}
-          {customColors.map(c => (
-            <button key={c} type="button"
+          {customColors.map((c, i) => (
+            <button key={i} type="button"
               onClick={() => setColor(c)}
-              onContextMenu={e => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, color: c }) }}
+              onContextMenu={e => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, idx: i }) }}
               style={{ width: 32, height: 32, borderRadius: '50%', background: c,
                 border: color === c ? '2px solid var(--ink)' : '2px solid transparent',
                 outline: '1px solid var(--line)', cursor: 'pointer' }} />
           ))}
-          {/* + button to add custom color */}
+          {/* + button: adds a new circle immediately, then opens picker to set its color */}
           <button type="button"
-            onClick={() => colorPickerRef.current?.click()}
+            onClick={() => {
+              const defaultColor = '#7a8770'
+              const idx = customColors.length
+              setCustomColors(prev => [...prev, defaultColor])
+              setEditingIdx(idx)
+              setColor(defaultColor)
+              setTimeout(() => colorPickerRef.current?.click(), 0)
+            }}
             style={{ width: 32, height: 32, borderRadius: '50%', background: 'transparent',
               border: '2px dashed var(--line-2)', cursor: 'pointer',
               display: 'grid', placeItems: 'center' }}>
             <Icon name="plus" size={14} color="var(--muted)" />
           </button>
-          <input ref={colorPickerRef} type="color" defaultValue="#7a8770"
+          <input ref={colorPickerRef} type="color"
+            value={editingIdx !== null ? (customColors[editingIdx] || '#7a8770') : '#7a8770'}
             onChange={e => {
+              if (editingIdx === null) return
               const c = e.target.value
-              setCustomColors(prev => prev.includes(c) ? prev : [...prev, c])
+              setCustomColors(prev => prev.map((col, i) => i === editingIdx ? c : col))
               setColor(c)
             }}
+            onBlur={() => setEditingIdx(null)}
             style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }} />
           {/* Context menu for custom colors */}
           {contextMenu && (
@@ -994,8 +1005,9 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
                 boxShadow: '0 4px 16px rgba(0,0,0,.18)', padding: '4px 0', minWidth: 140 }}>
               <button type="button"
                 onClick={() => {
-                  setCustomColors(prev => prev.filter(x => x !== contextMenu.color))
-                  if (color === contextMenu.color) setColor(CATEGORY_COLORS[0])
+                  const removed = customColors[contextMenu.idx]
+                  setCustomColors(prev => prev.filter((_, i) => i !== contextMenu.idx))
+                  if (color === removed) setColor(CATEGORY_COLORS[0])
                   setContextMenu(null)
                 }}
                 style={{ width: '100%', padding: '8px 14px', textAlign: 'left',
