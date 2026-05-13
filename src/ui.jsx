@@ -157,18 +157,22 @@ function fmtBarVal(n, sym) {
 // ── Month bars ────────────────────────────────────────────────────────────────
 export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey }) {
   const max = Math.max(...values, budget || 0, 1)
+  const dense = months.length > 12
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap: 6, alignItems: 'end', height: 160, overflow: 'hidden' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap: dense ? 2 : 6, alignItems: 'end', height: 160, overflow: 'visible' }}>
       {months.map((mk, i) => {
         const v = values[i]
         const h = Math.max(2, (v / max) * 130)
         const isActive = mk === activeKey
         const overBudget = budget && v > budget
+        const showLabel = v > 0 && (!dense || isActive)
         return (
           <button key={mk} onClick={() => onPick && onPick(mk)}
-            style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'hidden' }}>
-            <div style={{ fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-              {v > 0 ? fmtBarVal(v, currencySym) : ''}
+            style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'visible', position: 'relative', zIndex: isActive ? 1 : 0 }}>
+            <div style={{ fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums',
+              whiteSpace: 'nowrap', overflow: 'visible',
+              visibility: showLabel ? 'visible' : 'hidden' }}>
+              {fmtBarVal(v, currencySym)}
             </div>
             <div style={{
               width: '70%', maxWidth: 36, height: h,
