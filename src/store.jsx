@@ -190,6 +190,22 @@ export function StoreProvider({ children }) {
       await supabase.from('fixed_expenses').delete().eq('id', id)
     },
 
+    async setCurrency(currency) {
+      const map = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', INR: '₹', CAD: 'C$', AUD: 'A$' }
+      const sym = map[currency] || '$'
+      const newSettings = { ...state.settings, currency, currencySymbol: sym }
+      setState(s => ({ ...s, settings: newSettings }))
+      const { error } = await supabase.from('settings').upsert({
+        id: 1,
+        budget: newSettings.budget,
+        currency,
+        currency_symbol: sym,
+        include_fixed_in_total: newSettings.includeFixedInTotal,
+        dark_mode: newSettings.darkMode,
+      })
+      if (error) console.error('currency upsert error:', error)
+    },
+
     async setSetting(key, value) {
       const newSettings = { ...state.settings, [key]: value }
       setState(s => ({ ...s, settings: newSettings }))

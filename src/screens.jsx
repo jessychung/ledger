@@ -642,12 +642,7 @@ export function SettingsScreen() {
 
         <div>
           <div className="field-label">Currency</div>
-          <select className="select" value={s.currency} onChange={e => {
-            const v = e.target.value
-            const map = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', INR: '₹', CAD: 'C$', AUD: 'A$' }
-            store.setSetting('currency', v)
-            store.setSetting('currencySymbol', map[v] || '$')
-          }}>
+          <select className="select" value={s.currency} onChange={e => store.setCurrency(e.target.value)}>
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
             <option value="GBP">GBP (£)</option>
