@@ -7,8 +7,8 @@ const TABS = [
   { id: 'home',     label: 'Home',     icon: 'home' },
   { id: 'activity', label: 'Expenses', icon: 'list' },
   { id: 'add',      label: 'Add',      icon: 'plus', isAdd: true },
-  { id: 'trends',   label: 'Trends',   icon: 'trending' },
   { id: 'fixed',    label: 'Fixed',    icon: 'repeat' },
+  { id: 'trends',   label: 'Trends',   icon: 'trending' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ]
 
