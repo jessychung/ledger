@@ -234,6 +234,27 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
 
   const total = items.reduce((s, e) => s + e.amount, 0)
 
+  const grouped = React.useMemo(() => {
+    const today = new Date(); today.setHours(0,0,0,0)
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1)
+    const groups = []
+    let cur = null
+    for (const e of items) {
+      const d = new Date(e.date); d.setHours(0,0,0,0)
+      const key = d.toDateString()
+      if (key !== cur) {
+        cur = key
+        let label
+        if (d.getTime() === today.getTime()) label = 'Today'
+        else if (d.getTime() === yesterday.getTime()) label = 'Yesterday'
+        else label = d.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+        groups.push({ key, label, items: [] })
+      }
+      groups[groups.length - 1].items.push(e)
+    }
+    return groups
+  }, [items])
+
   return (
     <div className="stack gap-4">
       <div className="between" style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
@@ -270,13 +291,32 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
         </select>
       </div>
 
-      <div className="card">
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {items.length === 0
           ? <div className="empty">No expenses match.</div>
-          : items.map(e => (
-              <ExpenseRow key={e.id} expense={e} cat={store.catById(e.category)}
-                currencySym={sym} currency={store.state.settings.currency}
-                onClick={() => !e.fixed && onOpenExpense && onOpenExpense(e)} />
+          : grouped.map(group => (
+              <div key={group.key}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 18px 6px',
+                  borderBottom: '1px solid var(--line)',
+                  background: 'var(--surface-2)',
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', letterSpacing: '0.03em' }}>
+                    {group.label}
+                  </span>
+                  <span style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
+                    {sym}{group.items.reduce((s, e) => s + e.amount, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div style={{ padding: '0 18px' }}>
+                  {group.items.map(e => (
+                    <ExpenseRow key={e.id} expense={e} cat={store.catById(e.category)}
+                      currencySym={sym} currency={store.state.settings.currency}
+                      onClick={() => !e.fixed && onOpenExpense && onOpenExpense(e)} />
+                  ))}
+                </div>
+              </div>
             ))
         }
       </div>
