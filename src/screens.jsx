@@ -1065,7 +1065,7 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
               onClick={() => setSubcategories(prev => prev.filter(x => x !== s))}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid var(--line)', background: 'var(--surface)', fontSize: 13, cursor: 'pointer' }}>
               {s}
-              <span style={{ fontSize: 16, lineHeight: 1, color: 'var(--muted)' }}>+</span>
+              <Icon name="x" size={12} color="var(--muted)" />
             </button>
           ))}
         </div>
