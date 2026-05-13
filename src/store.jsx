@@ -191,18 +191,30 @@ export function StoreProvider({ children }) {
     },
 
     async setSetting(key, value) {
-      setState(s => ({ ...s, settings: { ...s.settings, [key]: value } }))
-      const colMap = {
-        budget: 'budget', currency: 'currency', currencySymbol: 'currency_symbol',
-        includeFixedInTotal: 'include_fixed_in_total', darkMode: 'dark_mode',
-      }
-      if (colMap[key]) await supabase.from('settings').upsert({ id: 1, [colMap[key]]: value })
+      const newSettings = { ...state.settings, [key]: value }
+      setState(s => ({ ...s, settings: newSettings }))
+      await supabase.from('settings').upsert({
+        id: 1,
+        budget: newSettings.budget,
+        currency: newSettings.currency,
+        currency_symbol: newSettings.currencySymbol,
+        include_fixed_in_total: newSettings.includeFixedInTotal,
+        dark_mode: newSettings.darkMode,
+      })
     },
 
     setBudget(n) {
       const v = Number(n) || 0
-      setState(s => ({ ...s, settings: { ...s.settings, budget: v } }))
-      supabase.from('settings').upsert({ id: 1, budget: v })
+      const newSettings = { ...state.settings, budget: v }
+      setState(s => ({ ...s, settings: newSettings }))
+      supabase.from('settings').upsert({
+        id: 1,
+        budget: v,
+        currency: newSettings.currency,
+        currency_symbol: newSettings.currencySymbol,
+        include_fixed_in_total: newSettings.includeFixedInTotal,
+        dark_mode: newSettings.darkMode,
+      })
     },
 
     async addCategory(c) {
