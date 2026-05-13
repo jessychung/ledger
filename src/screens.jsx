@@ -535,9 +535,59 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
 export function FixedScreen() {
   const store = useStore()
   const [editing, setEditing] = React.useState(null)
+  const [sortMode, setSortMode] = React.useState('custom')
+  const [customOrder, setCustomOrder] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('ledger.fixedOrder') || 'null') } catch { return null }
+  })
+  const [dragIdx, setDragIdx] = React.useState(null)
+  const [overIdx, setOverIdx] = React.useState(null)
+
   const sym = store.state.settings.currencySymbol
   const total = store.state.fixed.reduce((s, f) => s + f.amount, 0)
   const editingItem = editing && editing !== 'new' ? store.state.fixed.find(f => f.id === editing) : null
+
+  const sortedFixed = React.useMemo(() => {
+    const items = [...store.state.fixed]
+    if (sortMode === 'category') {
+      return items.sort((a, b) =>
+        store.catById(a.category).label.localeCompare(store.catById(b.category).label)
+      )
+    }
+    if (customOrder) {
+      items.sort((a, b) => {
+        const ai = customOrder.indexOf(a.id)
+        const bi = customOrder.indexOf(b.id)
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+      })
+    }
+    return items
+  }, [store.state.fixed, sortMode, customOrder])
+
+  function saveOrder(items) {
+    const ids = items.map(f => f.id)
+    setCustomOrder(ids)
+    try { localStorage.setItem('ledger.fixedOrder', JSON.stringify(ids)) } catch {}
+  }
+
+  function handleDragStart(e, i) {
+    e.dataTransfer.effectAllowed = 'move'
+    setDragIdx(i)
+  }
+  function handleDragOver(e, i) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setOverIdx(i)
+  }
+  function handleDrop(i) {
+    if (dragIdx === null || dragIdx === i) return
+    const next = [...sortedFixed]
+    const [moved] = next.splice(dragIdx, 1)
+    next.splice(i, 0, moved)
+    saveOrder(next)
+    setDragIdx(null)
+    setOverIdx(null)
+  }
+  function handleDragEnd() { setDragIdx(null); setOverIdx(null) }
 
   return (
     <div className="stack gap-4">
@@ -552,28 +602,51 @@ export function FixedScreen() {
         </div>
       </div>
 
-      <p className="muted" style={{ fontSize: 14, margin: 0, maxWidth: 540 }}>
-        Recurring monthly costs — rent, subscriptions, gym. They count toward your monthly total automatically.
-      </p>
+      <div className="between">
+        <p className="muted" style={{ fontSize: 14, margin: 0 }}>
+          Recurring monthly costs — rent, subscriptions, gym.
+        </p>
+        <div className="seg" style={{ flexShrink: 0 }}>
+          <button className={sortMode === 'custom' ? 'on' : ''} onClick={() => setSortMode('custom')}>Custom</button>
+          <button className={sortMode === 'category' ? 'on' : ''} onClick={() => setSortMode('category')}>Category</button>
+        </div>
+      </div>
 
-      <div className="card">
+      <div className="card" style={{ padding: 0 }}>
         {store.state.fixed.length === 0 && <div className="empty">No fixed expenses yet.</div>}
-        {store.state.fixed.map(f => {
+        {sortedFixed.map((f, i) => {
           const cat = store.catById(f.category)
+          const isDragging = dragIdx === i
+          const isOver = overIdx === i && dragIdx !== i
           return (
-            <button key={f.id} className="lrow" onClick={() => setEditing(f.id)}
-              style={{ background: 'none', border: 0, width: '100%', textAlign: 'left', cursor: 'pointer' }}>
-              <div className="ic" style={{ background: 'color-mix(in oklab, ' + cat.color + ' 15%, var(--surface))' }}>
-                <Icon name={cat.icon} size={15} color={cat.color} />
-              </div>
-              <div className="stack" style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</div>
-                <div className="meta">{cat.label} · monthly</div>
-              </div>
-              <div className="amt">
-                {sym}{hasCents(store.state.settings.currency) ? f.amount.toFixed(2) : Math.round(f.amount).toLocaleString()}
-              </div>
-            </button>
+            <div key={f.id}
+              draggable={sortMode === 'custom'}
+              onDragStart={e => handleDragStart(e, i)}
+              onDragOver={e => handleDragOver(e, i)}
+              onDrop={() => handleDrop(i)}
+              onDragEnd={handleDragEnd}
+              style={{
+                opacity: isDragging ? 0.35 : 1,
+                borderTop: isOver ? '2px solid var(--ink)' : '2px solid transparent',
+                transition: 'opacity 120ms',
+              }}>
+              <button className={'lrow' + (sortMode === 'custom' ? ' has-grip' : '')} onClick={() => setEditing(f.id)}
+                style={{ background: 'none', border: 0, width: '100%', textAlign: 'left', cursor: 'pointer', padding: '12px 18px' }}>
+                {sortMode === 'custom' && (
+                  <Icon name="grip" size={14} color="var(--muted-2)" style={{ cursor: 'grab', flexShrink: 0 }} />
+                )}
+                <div className="ic" style={{ background: 'color-mix(in oklab, ' + cat.color + ' 15%, var(--surface))' }}>
+                  <Icon name={cat.icon} size={15} color={cat.color} />
+                </div>
+                <div className="stack" style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</div>
+                  <div className="meta">{cat.label} · monthly</div>
+                </div>
+                <div className="amt">
+                  {sym}{hasCents(store.state.settings.currency) ? f.amount.toFixed(2) : Math.round(f.amount).toLocaleString()}
+                </div>
+              </button>
+            </div>
           )
         })}
       </div>

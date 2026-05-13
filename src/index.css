@@ -333,6 +333,7 @@ input[type=number] { -moz-appearance: textfield; }
   border-bottom: 1px solid var(--line);
 }
 .lrow:last-child { border-bottom: 0; }
+.lrow.has-grip { grid-template-columns: 16px 28px 1fr auto; }
 .lrow .ic {
   width: 28px; height: 28px; border-radius: 8px;
   background: var(--surface-2);

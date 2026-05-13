@@ -36,6 +36,7 @@ export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) 
     case 'search':   return <svg {...props}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     case 'sparkle':  return <svg {...props}><path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15l-1.8-4.7L5.5 9l4.7-1.8z"/><path d="M19 15l.9 2.4L22 18l-2.4.9L19 21l-.9-2.4L16 18l2.4-.6z"/></svg>
     case 'trending': return <svg {...props}><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>
+    case 'grip':    return <svg {...props}><circle cx="9" cy="5" r="1" fill={color}/><circle cx="9" cy="12" r="1" fill={color}/><circle cx="9" cy="19" r="1" fill={color}/><circle cx="15" cy="5" r="1" fill={color}/><circle cx="15" cy="12" r="1" fill={color}/><circle cx="15" cy="19" r="1" fill={color}/></svg>
     default:         return <svg {...props}><circle cx="12" cy="12" r="9"/></svg>
   }
 }
