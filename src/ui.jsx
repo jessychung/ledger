@@ -116,11 +116,17 @@ export function Sparkline({ values, width = 220, height = 50, color = 'var(--ink
   )
 }
 
+function fmtBarVal(n, sym) {
+  if (n >= 10000) return sym + Math.round(n / 1000) + 'k'
+  if (n >= 1000) return sym + (n / 1000).toFixed(1) + 'k'
+  return sym + Math.round(n)
+}
+
 // ── Month bars ────────────────────────────────────────────────────────────────
 export function MonthBars({ months, values, budget, currencySym = '$', onPick, activeKey }) {
   const max = Math.max(...values, budget || 0, 1)
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap: 10, alignItems: 'end', height: 160 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap: 6, alignItems: 'end', height: 160, overflow: 'hidden' }}>
       {months.map((mk, i) => {
         const v = values[i]
         const h = Math.max(2, (v / max) * 130)
@@ -128,9 +134,9 @@ export function MonthBars({ months, values, budget, currencySym = '$', onPick, a
         const overBudget = budget && v > budget
         return (
           <button key={mk} onClick={() => onPick && onPick(mk)}
-            style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: onPick ? 'pointer' : 'default' }}>
-            <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
-              {currencySym}{Math.round(v).toLocaleString()}
+            style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+              {fmtBarVal(v, currencySym)}
             </div>
             <div style={{
               width: '70%', maxWidth: 36, height: h,

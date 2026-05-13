@@ -139,6 +139,7 @@ input[type=number] { -moz-appearance: textfield; }
   max-width: 760px;
   width: 100%;
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 /* Mobile shell */
@@ -401,6 +402,15 @@ input[type=number] { -moz-appearance: textfield; }
   pointer-events: none;
 }
 .switch.on .switch-thumb { transform: translateX(18px); }
+
+/* Hero card stacking on phones */
+@media (max-width: 560px) {
+  .hero-card { padding: 20px !important; }
+  .hero-card-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .hero-ring { justify-self: center; }
+  .hero-ring svg { width: 120px !important; height: 120px !important; }
+  .brk-inner { grid-template-columns: 1fr !important; }
+}
 
 /* Narrow screen overrides (≤390px) */
 @media (max-width: 390px) {

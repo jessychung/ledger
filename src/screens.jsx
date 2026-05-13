@@ -213,18 +213,6 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
         }
       </div>
 
-      <style>{`
-        @media (max-width: 640px) {
-          .hero-ring svg { width: 130px !important; height: 130px !important; }
-          .brk-inner { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 560px) {
-          .hero-card { padding: 20px !important; }
-          .hero-card-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-          .hero-ring { justify-self: center; }
-          .hero-ring svg { width: 120px !important; height: 120px !important; }
-        }
-      `}</style>
     </div>
   )
 }
