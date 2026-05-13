@@ -109,24 +109,20 @@ function App() {
 
       {/* Bottom tab bar (mobile) */}
       <nav className="tabbar">
-        {TABS.map(t => (
+        {TABS.filter(t => !t.isAdd).map(t => (
           <button key={t.id}
-            className={'tab' + (tab === t.id && !t.isAdd ? ' active' : '') + (t.isAdd ? ' add' : '')}
+            className={'tab' + (tab === t.id ? ' active' : '')}
             onClick={() => handleTab(t.id)}>
-            {t.isAdd ? (
-              <>
-                <span className="add-pill"><Icon name="plus" size={20} /></span>
-                <span>Add</span>
-              </>
-            ) : (
-              <>
-                <Icon name={t.icon} size={20} />
-                <span>{t.label}</span>
-              </>
-            )}
+            <Icon name={t.icon} size={20} />
+            <span>{t.label}</span>
           </button>
         ))}
       </nav>
+
+      {/* FAB (mobile) */}
+      <button className="fab" onClick={() => { setEditingExpense(null); setAddOpen(true) }} aria-label="Add expense">
+        <Icon name="plus" size={24} />
+      </button>
 
       {/* Add/edit sheet */}
       <Sheet open={addOpen} onClose={() => setAddOpen(false)} title={editingExpense ? 'Edit expense' : 'New expense'}>
