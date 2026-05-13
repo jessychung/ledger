@@ -477,9 +477,9 @@ export function TrendsScreen() {
         </div>
       </>) : (<>
         {/* Month picker for daily view */}
-        <div className="seg" style={{ alignSelf: 'flex-start' }}>
+        <div className="month-strip">
           {trendMonths.map(m => (
-            <button key={m} className={activeMonth === m ? 'on' : ''}
+            <button key={m} className={'month-chip' + (activeMonth === m ? ' active' : '')}
               onClick={() => { setActiveMonth(m); setActiveDay(null) }}>
               {monthShort(m)}
             </button>
