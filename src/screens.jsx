@@ -300,7 +300,6 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '10px 18px 6px',
                   borderBottom: '1px solid var(--line)',
-                  background: 'var(--surface-2)',
                 }}>
                   <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', letterSpacing: '0.03em' }}>
                     {group.label}
