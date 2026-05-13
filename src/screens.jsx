@@ -84,7 +84,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
 
       {/* Hero card */}
       <div className="card" style={{ padding: 28 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 28, alignItems: 'center' }}>
+        <div className="hero-card-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 28, alignItems: 'center' }}>
           <div className="stack gap-3">
             <div className="label-eyebrow">{activeMonth === nowMonthKey() ? 'Spent so far' : 'Spent'}</div>
             <div className="num-hero">
@@ -218,6 +218,13 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           .hero-ring svg { width: 130px !important; height: 130px !important; }
           .brk-inner { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 420px) {
+          .hero-card-grid { grid-template-columns: 1fr !important; }
+          .hero-ring { display: flex; justify-content: center; margin-top: 4px; }
+          .hero-ring svg { width: 100px !important; height: 100px !important; }
+          .hero-ring > div { font-size: 22px !important; }
+          .card { padding: 16px !important; }
+        }
       `}</style>
     </div>
   )
@@ -246,12 +253,12 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
 
   return (
     <div className="stack gap-4">
-      <div className="between">
-        <div>
+      <div className="between" style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
+        <div style={{ minWidth: 0 }}>
           <div className="label-eyebrow">Expenses</div>
           <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk)}</h2>
         </div>
-        <div className="stack" style={{ alignItems: 'flex-end' }}>
+        <div className="stack" style={{ alignItems: 'flex-end', flexShrink: 0 }}>
           <div className="muted" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total</div>
           <div className="serif" style={{ fontSize: 38 }}>{sym}{Math.round(total).toLocaleString()}</div>
         </div>
@@ -360,7 +367,7 @@ export function TrendsScreen() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+      <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         <div className="stat">
           <div className="k">Average</div>
           <div className="v">{sym}{Math.round(avg).toLocaleString()}</div>

@@ -213,6 +213,7 @@ input[type=number] { -moz-appearance: textfield; }
 .num-hero .cents { font-size: 0.42em; color: var(--muted); margin-left: 2px; vertical-align: 0.5em; letter-spacing: 0; }
 .num-hero .cur   { font-size: 0.42em; color: var(--muted); vertical-align: 0.55em; letter-spacing: 0; margin-right: 2px; }
 @media (max-width: 860px) { .num-hero { font-size: 68px; } }
+@media (max-width: 420px) { .num-hero { font-size: 52px; } }
 
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
@@ -398,6 +399,21 @@ input[type=number] { -moz-appearance: textfield; }
   pointer-events: none;
 }
 .switch.on .switch-thumb { transform: translateX(18px); }
+
+/* Narrow screen overrides (≤390px) */
+@media (max-width: 390px) {
+  .main { padding: 12px 12px 96px; }
+  .card { padding: 14px; }
+  .h1 { font-size: 28px; }
+  .h2 { font-size: 16px; }
+  .stat .v { font-size: 18px; }
+  .stat { padding: 10px 10px; }
+  .tabbar .tab { padding: 4px 2px; font-size: 10px; gap: 2px; }
+  .tabbar .tab.add .add-pill { width: 34px; height: 34px; }
+  .seg button { padding: 5px 10px; }
+  .trends-stats { grid-template-columns: 1fr 1fr !important; }
+  .trends-stats .stat:last-child { grid-column: span 2; }
+}
 
 /* Category picker grid */
 .cat-grid {
