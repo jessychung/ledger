@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
-import { Icon, ProgressRing, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
+import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
 // ── Home ──────────────────────────────────────────────────────────────────────
 export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
@@ -104,12 +104,8 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
               )}
             </div>
           </div>
-          <div style={{ position: 'relative', display: 'grid', placeItems: 'center' }} className="hero-ring">
-            <ProgressRing pct={Math.min(pct, 1)} size={170} stroke={10} color={ringColor} track="var(--surface-2)" />
-            <div style={{ position: 'absolute', textAlign: 'center' }}>
-              <div className="serif" style={{ fontSize: 30, lineHeight: 1 }}>{Math.round(pct * 100)}%</div>
-              <div className="muted" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4 }}>used</div>
-            </div>
+          <div className="hero-ring">
+            <ArcGauge pct={Math.min(pct, 1)} size={170} color={ringColor} />
           </div>
         </div>
       </div>

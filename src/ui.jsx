@@ -47,7 +47,7 @@ export function ProgressRing({ pct, size = 240, stroke = 10, color, track }) {
   const clamped = Math.min(Math.max(pct, 0), 1)
   const offset = c - clamped * c
   return (
-    <svg width={size} height={size} className="donut" style={{ display: 'block' }}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="donut" style={{ display: 'block' }}>
       <circle cx={size/2} cy={size/2} r={r} stroke={track || 'var(--surface-2)'} strokeWidth={stroke} fill="none" />
       <circle cx={size/2} cy={size/2} r={r}
         stroke={color || 'var(--ink)'} strokeWidth={stroke} fill="none"
@@ -55,6 +55,37 @@ export function ProgressRing({ pct, size = 240, stroke = 10, color, track }) {
         strokeDasharray={c} strokeDashoffset={offset}
         style={{ transition: 'stroke-dashoffset 600ms cubic-bezier(.2,.8,.2,1), stroke 200ms' }}
       />
+    </svg>
+  )
+}
+
+// ── Arc gauge (hero card) ─────────────────────────────────────────────────────
+export function ArcGauge({ pct, size = 200, color, track }) {
+  const r = 76, cx = 100, cy = 108
+  const toRad = d => d * Math.PI / 180
+  const startX = +(cx + r * Math.sin(toRad(225))).toFixed(2)
+  const startY = +(cy - r * Math.cos(toRad(225))).toFixed(2)
+  const endX   = +(cx + r * Math.sin(toRad(135))).toFixed(2)
+  const endY   = +(cy - r * Math.cos(toRad(135))).toFixed(2)
+  const pathD  = `M ${startX} ${startY} A ${r} ${r} 0 1 1 ${endX} ${endY}`
+  const arcLen = 2 * Math.PI * r * 0.75
+  const filled = Math.min(Math.max(pct, 0), 1) * arcLen
+  const c = color || 'var(--ink)'
+  return (
+    <svg viewBox="0 0 200 185" width={size} height={size * 0.925}
+      style={{ display: 'block', maxWidth: '100%', overflow: 'visible' }}>
+      <path d={pathD} fill="none" stroke={track || 'var(--line)'} strokeWidth={13} strokeLinecap="round" />
+      <path d={pathD} fill="none" stroke={c} strokeWidth={13} strokeLinecap="round"
+        strokeDasharray={`${filled.toFixed(1)} ${(arcLen + 20).toFixed(1)}`}
+        style={{ transition: 'stroke-dasharray 700ms cubic-bezier(.2,.8,.2,1), stroke 200ms' }} />
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="38"
+        fontFamily="'Instrument Serif', serif" fill={c}>
+        {Math.round(pct * 100)}%
+      </text>
+      <text x={cx} y={cy + 16} textAnchor="middle" fontSize="11"
+        letterSpacing="2.5" fill="var(--muted)">
+        USED
+      </text>
     </svg>
   )
 }

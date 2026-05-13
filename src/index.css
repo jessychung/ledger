@@ -419,9 +419,9 @@ input[type=number] { -moz-appearance: textfield; }
 /* Hero card stacking on phones */
 @media (max-width: 560px) {
   .hero-card { padding: 20px !important; }
-  .hero-card-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-  .hero-ring { justify-self: center; }
-  .hero-ring svg { width: 120px !important; height: 120px !important; }
+  .hero-card-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .hero-ring { width: 100%; max-width: 260px; margin: 0 auto; }
+  .hero-ring svg { width: 100% !important; height: auto !important; }
   .brk-inner { grid-template-columns: 1fr !important; }
 }
 
