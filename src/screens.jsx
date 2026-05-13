@@ -615,6 +615,8 @@ export function SettingsScreen() {
   const s = store.state.settings
   const [budgetDraft, setBudgetDraft] = React.useState(String(s.budget))
   const [editingCat, setEditingCat] = React.useState(null)
+  const [showClearConfirm, setShowClearConfirm] = React.useState(false)
+  const [clearInput, setClearInput] = React.useState('')
 
   React.useEffect(() => { setBudgetDraft(String(s.budget)) }, [s.budget])
 
@@ -727,15 +729,36 @@ export function SettingsScreen() {
           <div style={{ fontSize: 14, fontWeight: 500 }}>Data</div>
           <div className="muted" style={{ fontSize: 12 }}>Stored in your Supabase database.</div>
         </div>
-        <div className="row gap-2" style={{ flexWrap: 'wrap' }}>
-          <button className="btn" onClick={() => {
-            if (confirm('Clear all variable expenses? Fixed expenses and budget remain.')) store.clearAll()
-          }}>Clear expenses</button>
-          <button className="btn danger" onClick={() => {
-            if (confirm('Reset everything to seeded sample data?')) store.resetAll()
-          }}>Reset to sample data</button>
-        </div>
+        <button className="btn danger" onClick={() => { setClearInput(''); setShowClearConfirm(true) }}>
+          Clear all expenses
+        </button>
       </div>
+
+      <Sheet open={showClearConfirm} onClose={() => setShowClearConfirm(false)} title="Clear all expenses">
+        <div className="stack gap-4">
+          <div style={{ padding: '14px 16px', borderRadius: 'var(--r-md)', background: 'color-mix(in oklab, var(--alert) 10%, var(--surface))', border: '1px solid color-mix(in oklab, var(--alert) 25%, transparent)' }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--alert)', marginBottom: 4 }}>This cannot be undone</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+              All {store.state.expenses.length} expense{store.state.expenses.length !== 1 ? 's' : ''} will be permanently deleted. Fixed expenses and settings are not affected.
+            </div>
+          </div>
+          <div>
+            <div className="field-label">Type DELETE to confirm</div>
+            <input className="input" placeholder="DELETE" value={clearInput}
+              onChange={e => setClearInput(e.target.value)}
+              onPaste={e => e.preventDefault()}
+              style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }} />
+          </div>
+          <div className="row gap-2">
+            <button className="btn" style={{ flex: 1 }} onClick={() => setShowClearConfirm(false)}>Cancel</button>
+            <button className="btn danger" style={{ flex: 1, opacity: clearInput === 'DELETE' ? 1 : 0.4 }}
+              disabled={clearInput !== 'DELETE'}
+              onClick={() => { store.clearAll(); setShowClearConfirm(false) }}>
+              Delete all expenses
+            </button>
+          </div>
+        </div>
+      </Sheet>
 
       <div className="muted" style={{ fontSize: 12, textAlign: 'center', padding: '12px 0' }}>
         Ledger · personal expenses · v1
