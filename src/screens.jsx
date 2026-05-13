@@ -1,4 +1,5 @@
 import React from 'react'
+import ReactDOM from 'react-dom'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
@@ -997,8 +998,8 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
             }}
             onBlur={() => setEditingIdx(null)}
             style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }} />
-          {/* Context menu for custom colors */}
-          {contextMenu && (
+          {/* Context menu rendered in a portal to escape sheet transform */}
+          {contextMenu && ReactDOM.createPortal(
             <div onMouseDown={e => e.stopPropagation()}
               style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999,
                 background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8,
@@ -1015,7 +1016,8 @@ function CategoryForm({ initial, canDelete, onSave, onDelete }) {
                   color: 'var(--red)', fontSize: 13 }}>
                 Remove color
               </button>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>
