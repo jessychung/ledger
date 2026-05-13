@@ -193,7 +193,7 @@ export function StoreProvider({ children }) {
     async setSetting(key, value) {
       const newSettings = { ...state.settings, [key]: value }
       setState(s => ({ ...s, settings: newSettings }))
-      await supabase.from('settings').upsert({
+      const { error } = await supabase.from('settings').upsert({
         id: 1,
         budget: newSettings.budget,
         currency: newSettings.currency,
@@ -201,13 +201,14 @@ export function StoreProvider({ children }) {
         include_fixed_in_total: newSettings.includeFixedInTotal,
         dark_mode: newSettings.darkMode,
       })
+      if (error) console.error('settings upsert error:', error)
     },
 
-    setBudget(n) {
+    async setBudget(n) {
       const v = Number(n) || 0
       const newSettings = { ...state.settings, budget: v }
       setState(s => ({ ...s, settings: newSettings }))
-      supabase.from('settings').upsert({
+      const { error } = await supabase.from('settings').upsert({
         id: 1,
         budget: v,
         currency: newSettings.currency,
@@ -215,6 +216,7 @@ export function StoreProvider({ children }) {
         include_fixed_in_total: newSettings.includeFixedInTotal,
         dark_mode: newSettings.darkMode,
       })
+      if (error) console.error('budget upsert error:', error)
     },
 
     async addCategory(c) {
