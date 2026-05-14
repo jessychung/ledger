@@ -738,7 +738,7 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
 
       <div>
         <div className="field-label">Note (optional)</div>
-        <input className="input" placeholder="e.g. lunch with Sam" value={note} onChange={e => setNote(e.target.value)} />
+        <input className="input" value={note} onChange={e => setNote(e.target.value)} />
       </div>
 
       <div className="row gap-2" style={{ marginTop: 6 }}>
