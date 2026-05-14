@@ -135,7 +135,7 @@ function App() {
       </button>
 
       {/* Add/edit sheet */}
-      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title={editingExpense ? 'Edit expense' : 'New expense'}>
+      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title={editingExpense ? 'Edit expense' : 'New expense'} top>
         <ExpenseForm
           initial={editingExpense}
           onCancel={() => setAddOpen(false)}

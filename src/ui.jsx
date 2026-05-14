@@ -250,7 +250,7 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
 }
 
 // ── Sheet ─────────────────────────────────────────────────────────────────────
-export function Sheet({ open, onClose, title, children }) {
+export function Sheet({ open, onClose, title, children, top }) {
   React.useEffect(() => {
     if (!open) return
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -265,8 +265,7 @@ export function Sheet({ open, onClose, title, children }) {
   return (
     <>
       <div className="sheet-back" onClick={onClose} />
-      <div className="sheet" role="dialog" aria-modal="true">
-        <div className="sheet-handle" />
+      <div className={top ? 'sheet sheet-top' : 'sheet'} role="dialog" aria-modal="true">
         <div className="between" style={{ marginBottom: 14 }}>
           <h2 className="h2">{title}</h2>
           <button className="btn ghost" onClick={onClose} aria-label="Close" style={{ padding: 8 }}>
@@ -274,6 +273,7 @@ export function Sheet({ open, onClose, title, children }) {
           </button>
         </div>
         <div>{children}</div>
+        {top && <div className="sheet-handle" style={{ marginTop: 14 }} />}
       </div>
     </>
   )

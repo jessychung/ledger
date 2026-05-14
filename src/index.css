@@ -293,7 +293,15 @@ input[type=number] { -moz-appearance: textfield; }
   max-height: 92vh; overflow-y: auto; overflow-x: hidden;
   animation: slideUp 220ms cubic-bezier(.2,.8,.2,1);
 }
-.sheet-handle { width: 36px; height: 4px; background: var(--line-2); border-radius: 2px; margin: 4px auto 14px; }
+.sheet-handle { width: 36px; height: 4px; background: var(--line-2); border-radius: 2px; margin: 4px auto 0; }
+.sheet-top {
+  bottom: auto; top: 0;
+  border-top: none; border-bottom: 1px solid var(--line);
+  border-radius: 0 0 22px 22px;
+  padding: calc(env(safe-area-inset-top) + 14px) 18px 18px;
+  animation: slideDown 220ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 @media (min-width: 700px) {
   .sheet {
     left: 50%; right: auto; bottom: 50%;
@@ -305,6 +313,7 @@ input[type=number] { -moz-appearance: textfield; }
     animation: popIn 180ms cubic-bezier(.2,.8,.2,1);
   }
   .sheet-handle { display: none; }
+  .sheet-top { top: auto; bottom: 50%; border-top: 1px solid var(--line); border-bottom: none; border-radius: var(--r-xl); padding: 14px 18px 20px; animation: popIn 180ms cubic-bezier(.2,.8,.2,1); }
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
