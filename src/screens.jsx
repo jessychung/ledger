@@ -733,7 +733,7 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
 
       <div>
         <div className="field-label">Date</div>
-        <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} />
+        <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
       </div>
 
       <div>

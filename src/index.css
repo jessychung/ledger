@@ -257,6 +257,7 @@ input[type=number] { -moz-appearance: textfield; }
 
 .input, .select, .textarea {
   width: 100%;
+  box-sizing: border-box;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
