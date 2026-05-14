@@ -62,9 +62,10 @@ function App() {
     return (
       <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'var(--muted)' }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="brand-mark" style={{ margin: '0 auto 12px', width: 36, height: 36, fontSize: 22 }}>L</div>
-          <p style={{ fontSize: 14, marginTop: 8 }}>Loading…</p>
+          <div style={{ fontSize: 52, lineHeight: 1, animation: 'catBob 1s ease-in-out infinite' }}>🐱</div>
+          <p style={{ fontSize: 13, marginTop: 12, letterSpacing: '0.05em' }}>loading…</p>
         </div>
+        <style>{`@keyframes catBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }`}</style>
       </div>
     )
   }
