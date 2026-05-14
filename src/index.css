@@ -69,6 +69,7 @@ input, textarea, select { font-family: inherit; color: inherit; }
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; min-width: 0; }
+input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
 
 /* ---- App shell ---- */
 #app { min-height: 100vh; }
