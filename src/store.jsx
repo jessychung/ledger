@@ -41,6 +41,7 @@ export function hasCents(currency) { return !NO_CENTS.has(currency) }
 export function expensesForMonth(state, mk, includeFixed = true) {
   const real = state.expenses.filter(e => monthKey(e.date) === mk)
   if (!includeFixed) return real
+  if (real.length === 0 && mk !== nowMonthKey()) return real
   const [y, m] = mk.split('-').map(Number)
   const firstOfMonth = new Date(y, m - 1, 1).toISOString()
   const virtual = state.fixed.map(f => ({
@@ -60,15 +61,19 @@ export function totalsByMonth(state, includeFixed = true) {
     const mk = monthKey(e.date)
     map[mk] = (map[mk] || 0) + e.amount
   }
+  const seen = new Set(Object.keys(map))
+  const now = new Date()
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    seen.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
+  }
+  for (const mk of seen) if (!(mk in map)) map[mk] = 0
   if (includeFixed) {
     const fixedTotal = state.fixed.reduce((s, f) => s + f.amount, 0)
-    const seen = new Set(Object.keys(map))
-    const now = new Date()
-    for (let i = 0; i < 6; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      seen.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
+    const current = nowMonthKey()
+    for (const mk of seen) {
+      if (map[mk] > 0 || mk === current) map[mk] = (map[mk] || 0) + fixedTotal
     }
-    for (const mk of seen) map[mk] = (map[mk] || 0) + fixedTotal
   }
   return map
 }
