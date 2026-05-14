@@ -12,9 +12,12 @@ const TABS = [
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ]
 
+const PATH_TO_TAB = { '/expenses': 'activity', '/fixed': 'fixed', '/trends': 'trends', '/settings': 'settings' }
+const TAB_TO_PATH = { home: '/', activity: '/expenses', fixed: '/fixed', trends: '/trends', settings: '/settings' }
+
 function App() {
   const store = useStore()
-  const [tab, setTab] = React.useState('home')
+  const [tab, setTab] = React.useState(() => PATH_TO_TAB[window.location.pathname] || 'home')
   const [addOpen, setAddOpen] = React.useState(false)
   const [editingExpense, setEditingExpense] = React.useState(null)
   const [activityMonth, setActivityMonth] = React.useState(null)
@@ -31,10 +34,17 @@ function App() {
     try { localStorage.setItem('ledger.navCollapsed', navCollapsed ? '1' : '0') } catch {}
   }, [navCollapsed])
 
+  React.useEffect(() => {
+    function onPop() { setTab(PATH_TO_TAB[window.location.pathname] || 'home') }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
   function handleTab(id) {
     if (id === 'add') { setEditingExpense(null); setAddOpen(true); return }
     if (id === 'activity') setActivityMonth(null)
     setTab(id)
+    window.history.pushState({}, '', TAB_TO_PATH[id] || '/')
   }
 
   function openExpense(e) {
