@@ -2,14 +2,15 @@ import React from 'react'
 import { StoreProvider, useStore } from './store'
 import { Icon, Sheet, useToast } from './ui'
 import { HomeScreen, ActivityScreen, TrendsScreen, ExpenseForm, FixedScreen, SettingsScreen } from './screens'
+import { LangProvider, useT } from './i18n'
 
 const TABS = [
-  { id: 'home',     label: 'Home',     icon: 'home' },
-  { id: 'activity', label: 'Expenses', icon: 'list' },
-  { id: 'add',      label: 'Add',      icon: 'plus', isAdd: true },
-  { id: 'fixed',    label: 'Fixed',    icon: 'repeat' },
-  { id: 'trends',   label: 'Trends',   icon: 'trending' },
-  { id: 'settings', label: 'Settings', icon: 'settings' },
+  { id: 'home',     labelKey: 'tab.home',     icon: 'home' },
+  { id: 'activity', labelKey: 'tab.expenses', icon: 'list' },
+  { id: 'add',      labelKey: 'tab.add',      icon: 'plus', isAdd: true },
+  { id: 'fixed',    labelKey: 'tab.fixed',    icon: 'repeat' },
+  { id: 'trends',   labelKey: 'tab.trends',   icon: 'trending' },
+  { id: 'settings', labelKey: 'tab.settings', icon: 'settings' },
 ]
 
 const PATH_TO_TAB = { '/expenses': 'activity', '/fixed': 'fixed', '/trends': 'trends', '/settings': 'settings' }
@@ -17,6 +18,7 @@ const TAB_TO_PATH = { home: '/', activity: '/expenses', fixed: '/fixed', trends:
 
 function App() {
   const store = useStore()
+  const t = useT()
   const [tab, setTab] = React.useState(() => PATH_TO_TAB[window.location.pathname] || 'home')
   const [addOpen, setAddOpen] = React.useState(false)
   const [editingExpense, setEditingExpense] = React.useState(null)
@@ -56,6 +58,7 @@ function App() {
   function viewMonthInActivity(mk) {
     setActivityMonth(mk)
     setTab('activity')
+    window.history.pushState({}, '', '/expenses')
   }
 
   if (store.state.loading) {
@@ -63,7 +66,7 @@ function App() {
       <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'var(--muted)' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 52, lineHeight: 1, animation: 'catBob 1s ease-in-out infinite' }}>🐱</div>
-          <p style={{ fontSize: 13, marginTop: 12, letterSpacing: '0.05em' }}>loading…</p>
+          <p style={{ fontSize: 13, marginTop: 12, letterSpacing: '0.05em' }}>{t('loading')}</p>
         </div>
         <style>{`@keyframes catBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }`}</style>
       </div>
@@ -89,26 +92,26 @@ function App() {
     <div className={'app-grid' + (navCollapsed ? ' nav-collapsed' : '')}>
       {/* Sidebar (desktop) */}
       <aside className="sidebar">
-        {sidebarTabs.map(t => (
-          <button key={t.id}
-            className={'nav-item' + (tab === t.id ? ' active' : '')}
-            onClick={() => handleTab(t.id)}
-            title={navCollapsed ? t.label : ''}>
-            <Icon name={t.icon} size={16} />
-            <span className="nav-label">{t.label}</span>
+        {sidebarTabs.map(tb => (
+          <button key={tb.id}
+            className={'nav-item' + (tab === tb.id ? ' active' : '')}
+            onClick={() => handleTab(tb.id)}
+            title={navCollapsed ? t(tb.labelKey) : ''}>
+            <Icon name={tb.icon} size={16} />
+            <span className="nav-label">{t(tb.labelKey)}</span>
           </button>
         ))}
         <div style={{ height: 8 }} />
         <button
           className="nav-item"
           onClick={() => { setEditingExpense(null); setAddOpen(true) }}
-          title={navCollapsed ? 'New expense' : ''}
+          title={navCollapsed ? t('nav.new_expense') : ''}
           style={{ background: 'var(--accent)', color: 'var(--bg)', borderColor: 'var(--accent)', justifyContent: 'center', marginTop: 4, fontWeight: 500 }}>
           <Icon name="plus" size={16} />
-          <span className="nav-label">New expense</span>
+          <span className="nav-label">{t('nav.new_expense')}</span>
         </button>
         <div className="nav-spacer" />
-        <button className="nav-toggle" onClick={() => setNavCollapsed(v => !v)} aria-label="Toggle sidebar">
+        <button className="nav-toggle" onClick={() => setNavCollapsed(v => !v)} aria-label={t('aria.toggle_sidebar')}>
           <Icon name="chevron-l" size={14} />
         </button>
       </aside>
@@ -120,40 +123,40 @@ function App() {
 
       {/* Bottom tab bar (mobile) */}
       <nav className="tabbar">
-        {TABS.filter(t => !t.isAdd).map(t => (
-          <button key={t.id}
-            className={'tab' + (tab === t.id ? ' active' : '')}
-            onClick={() => handleTab(t.id)}>
-            <Icon name={t.icon} size={20} />
-            <span>{t.label}</span>
+        {TABS.filter(tb => !tb.isAdd).map(tb => (
+          <button key={tb.id}
+            className={'tab' + (tab === tb.id ? ' active' : '')}
+            onClick={() => handleTab(tb.id)}>
+            <Icon name={tb.icon} size={20} />
+            <span>{t(tb.labelKey)}</span>
           </button>
         ))}
       </nav>
 
       {/* FAB (mobile) */}
-      <button className="fab" onClick={() => { setEditingExpense(null); setAddOpen(true) }} aria-label="Add expense">
+      <button className="fab" onClick={() => { setEditingExpense(null); setAddOpen(true) }} aria-label={t('nav.new_expense')}>
         <Icon name="plus" size={24} />
       </button>
 
       {/* Add/edit sheet */}
-      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title={editingExpense ? 'Edit expense' : 'New expense'} top>
+      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title={t(editingExpense ? 'sheet.edit_expense' : 'sheet.new_expense')} top>
         <ExpenseForm
           initial={editingExpense}
           onCancel={() => setAddOpen(false)}
           onSave={(data) => {
             if (editingExpense) {
               store.updateExpense(editingExpense.id, data)
-              showToast('Expense updated')
+              showToast(t('toast.updated'))
             } else {
               store.addExpense(data)
-              showToast('Expense added')
+              showToast(t('toast.added'))
             }
             setAddOpen(false)
             setEditingExpense(null)
           }}
           onDelete={editingExpense ? () => {
             store.deleteExpense(editingExpense.id)
-            showToast('Expense deleted')
+            showToast(t('toast.deleted'))
             setAddOpen(false)
             setEditingExpense(null)
           } : null}
@@ -167,8 +170,10 @@ function App() {
 
 export default function Root() {
   return (
-    <StoreProvider>
-      <App />
-    </StoreProvider>
+    <LangProvider>
+      <StoreProvider>
+        <App />
+      </StoreProvider>
+    </LangProvider>
   )
 }
