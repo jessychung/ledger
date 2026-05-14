@@ -77,7 +77,7 @@ const EN = {
   // Fixed form
   'form.name': 'Name', 'form.name_placeholder': 'e.g. Rent',
   'form.amount': 'Amount', 'form.amount_per_month': 'Amount per month',
-  'form.category': 'Category', 'form.date': 'Date', 'form.note': 'Note (optional)',
+  'form.category': 'Category', 'form.subcategory': 'Subcategory', 'form.date': 'Date', 'form.note': 'Note (optional)',
   'form.monthly': 'Monthly', 'form.yearly': 'Yearly',
   'form.save': 'Save changes', 'form.add': 'Add', 'form.cancel': 'Cancel',
   'form.delete': 'Delete', 'form.add_expense': 'Add expense',
@@ -203,7 +203,7 @@ const JA = {
   // Fixed form
   'form.name': '名前', 'form.name_placeholder': '例：家賃',
   'form.amount': '金額', 'form.amount_per_month': '月あたりの金額',
-  'form.category': 'カテゴリ', 'form.date': '日付', 'form.note': 'メモ（任意）',
+  'form.category': 'カテゴリ', 'form.subcategory': 'サブカテゴリ', 'form.date': '日付', 'form.note': 'メモ（任意）',
   'form.monthly': '月払い', 'form.yearly': '年払い',
   'form.save': '保存', 'form.add': '追加', 'form.cancel': 'キャンセル',
   'form.delete': '削除', 'form.add_expense': '支出を追加',

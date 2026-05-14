@@ -1,5 +1,6 @@
 import React from 'react'
 import { monthShort } from './store'
+import { useT } from './i18n'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) => {
@@ -251,6 +252,7 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
 
 // ── Sheet ─────────────────────────────────────────────────────────────────────
 export function Sheet({ open, onClose, title, children, top }) {
+  const t = useT()
   React.useEffect(() => {
     if (!open) return
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -268,7 +270,7 @@ export function Sheet({ open, onClose, title, children, top }) {
       <div className={top ? 'sheet sheet-top' : 'sheet'} role="dialog" aria-modal="true">
         <div className="between" style={{ marginBottom: 14 }}>
           <h2 className="h2">{title}</h2>
-          <button className="btn ghost" onClick={onClose} aria-label="Close" style={{ padding: 8 }}>
+          <button className="btn ghost" onClick={onClose} aria-label={t('aria.close')} style={{ padding: 8 }}>
             <Icon name="x" size={18} />
           </button>
         </div>

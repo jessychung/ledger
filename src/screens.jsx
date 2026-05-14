@@ -713,7 +713,7 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
 
       {subs.length > 0 && (
         <div>
-          <div className="field-label">{t('form.category')}</div>
+          <div className="field-label">{t('form.subcategory')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {subs.map(s => (
               <button key={s} type="button" onClick={() => setSubcategory(subcategory === s ? '' : s)}
