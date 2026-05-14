@@ -221,6 +221,7 @@ export function CategoryChip({ cat, selected, onClick }) {
 
 // ── Expense row ───────────────────────────────────────────────────────────────
 export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
+  const t = useT()
   const d = new Date(expense.date)
   const dateLabel = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
   const showCents = currency ? !['JPY','KRW','VND','CLP','HUF'].includes(currency) : true
@@ -235,13 +236,14 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
         </div>
         <div className="stack" style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {expense.note || cat.label}
+            {expense.note || expense.subcategory || cat.label}
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>{cat.label}</span>
+            {expense.subcategory && <><span className="dot" /><span>{expense.subcategory}</span></>}
             <span className="dot" />
             <span>{dateLabel}</span>
-            {expense.fixed && <><span className="dot" /><span style={{ fontStyle: 'italic' }}>fixed</span></>}
+            {expense.fixed && <><span className="dot" /><span style={{ fontStyle: 'italic' }}>{t('fixed.monthly')}</span></>}
           </div>
         </div>
         <div className="amt">{currencySym}{amtStr}</div>
