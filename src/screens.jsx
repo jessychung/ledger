@@ -693,12 +693,12 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
     <div className="stack gap-4">
       <div>
         <div className="field-label">{t('form.amount')}</div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '10px 14px', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--surface)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '10px 14px', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--surface)', width: '100%', boxSizing: 'border-box' }}>
           <span className="muted serif" style={{ fontSize: 28 }}>{sym}</span>
           <input type="number" step="0.01" inputMode="decimal" autoFocus
             value={amount} onChange={e => setAmount(e.target.value)}
             placeholder="0.00" className="serif"
-            style={{ flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: 36, color: 'var(--ink)', padding: 0, fontFamily: '"Instrument Serif", serif' }} />
+            style={{ flex: 1, minWidth: 0, width: '100%', border: 0, outline: 'none', background: 'transparent', fontSize: 36, color: 'var(--ink)', padding: 0, fontFamily: '"Instrument Serif", serif' }} />
         </div>
       </div>
 
@@ -912,11 +912,11 @@ function FixedForm({ initial, onSave, onDelete }) {
       </div>
       <div>
         <div className="field-label">{t('form.amount_per_month')}</div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '10px 14px', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--surface)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '10px 14px', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--surface)', width: '100%', boxSizing: 'border-box' }}>
           <span className="muted serif" style={{ fontSize: 22 }}>{sym}</span>
           <input type="number" step="0.01" inputMode="decimal"
             value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
-            style={{ flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: 22, color: 'var(--ink)', padding: 0, fontFamily: '"Instrument Serif", serif' }} />
+            style={{ flex: 1, minWidth: 0, width: '100%', border: 0, outline: 'none', background: 'transparent', fontSize: 22, color: 'var(--ink)', padding: 0, fontFamily: '"Instrument Serif", serif' }} />
         </div>
       </div>
       <div>
