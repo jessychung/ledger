@@ -99,30 +99,6 @@ function generateInsights(state, activeMonth) {
   return insights
 }
 
-function InsightCard({ ins }) {
-  return (
-    <div style={{
-      flex: '0 0 auto', width: 158, padding: '14px 16px', borderRadius: 16,
-      background: ins.good === true ? 'color-mix(in oklab, var(--accent) 10%, var(--surface))'
-               : ins.good === false ? 'color-mix(in oklab, var(--alert) 10%, var(--surface))'
-               : 'var(--surface)',
-      border: '1px solid ' + (ins.good === true ? 'color-mix(in oklab, var(--accent) 30%, transparent)'
-                             : ins.good === false ? 'color-mix(in oklab, var(--alert) 30%, transparent)'
-                             : 'var(--line)'),
-    }}>
-      <div style={{ marginBottom: 8 }}>
-        {ins.emoji
-          ? <span style={{ fontSize: 22 }}>{ins.emoji}</span>
-          : <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + ins.iconColor + ' 15%, var(--surface))', display: 'inline-grid', placeItems: 'center' }}>
-              <Icon name={ins.icon} size={13} color={ins.iconColor} />
-            </span>
-        }
-      </div>
-      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 4 }}>{ins.headline}</div>
-      <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.3 }}>{ins.sub}</div>
-    </div>
-  )
-}
 
 // ── Home ──────────────────────────────────────────────────────────────────────
 export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
@@ -235,8 +211,28 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
 
       {/* Insights */}
       {insights.length > 0 && (
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-          {insights.map((ins, i) => <InsightCard key={i} ins={ins} />)}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', margin: '-8px 0' }}>
+          {insights.map((ins, i) => (
+            <div key={i} style={{
+              flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 12px', borderRadius: 999,
+              background: ins.good === true ? 'color-mix(in oklab, var(--accent) 12%, var(--surface))'
+                        : ins.good === false ? 'color-mix(in oklab, var(--alert) 12%, var(--surface))'
+                        : 'var(--surface)',
+              border: '1px solid ' + (ins.good === true ? 'color-mix(in oklab, var(--accent) 30%, transparent)'
+                                    : ins.good === false ? 'color-mix(in oklab, var(--alert) 30%, transparent)'
+                                    : 'var(--line)'),
+              fontSize: 13, whiteSpace: 'nowrap',
+            }}>
+              {ins.emoji
+                ? <span style={{ fontSize: 14 }}>{ins.emoji}</span>
+                : <span style={{ width: 16, height: 16, borderRadius: 4, background: 'color-mix(in oklab, ' + ins.iconColor + ' 15%, var(--surface))', display: 'inline-grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Icon name={ins.icon} size={10} color={ins.iconColor} />
+                  </span>
+              }
+              {ins.headline}
+            </div>
+          ))}
         </div>
       )}
 
