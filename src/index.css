@@ -148,7 +148,7 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
 @media (max-width: 860px) {
   .app-grid { grid-template-columns: 1fr; }
   .sidebar { display: none; }
-  .main { padding: 18px 16px 100px; }
+  .main { padding: calc(env(safe-area-inset-top) + 18px) 16px 100px; }
   .mobile-only { display: block; }
 }
 
