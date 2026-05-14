@@ -3,6 +3,127 @@ import ReactDOM from 'react-dom'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
+// ── Insights ──────────────────────────────────────────────────────────────────
+function generateInsights(state, activeMonth) {
+  const sym = state.settings.currencySymbol
+  const budget = state.settings.budget
+  const insights = []
+  const [y, mo] = activeMonth.split('-').map(Number)
+  const lastMonth = monthKey(new Date(y, mo - 2, 1))
+  const totals = totalsByMonth(state, false)
+  const thisTotal = totals[activeMonth] || 0
+  const lastTotal = totals[lastMonth] || 0
+  const thisBreakdown = breakdownByCategory(state, activeMonth, false)
+  const lastBreakdown = breakdownByCategory(state, lastMonth, false)
+  const isCurrentMonth = activeMonth === nowMonthKey()
+
+  // Month-over-month
+  if (lastTotal > 0 && thisTotal > 0) {
+    const pct = Math.round((thisTotal - lastTotal) / lastTotal * 100)
+    if (Math.abs(pct) >= 5) {
+      insights.push({
+        emoji: pct > 0 ? '📈' : '📉',
+        headline: pct > 0 ? `Up ${pct}% from last month` : `Down ${Math.abs(pct)}% from last month`,
+        sub: `${sym}${Math.round(thisTotal).toLocaleString()} vs ${sym}${Math.round(lastTotal).toLocaleString()}`,
+        good: pct < 0,
+      })
+    }
+  }
+
+  // Budget projection (current month only)
+  if (budget > 0 && isCurrentMonth && thisTotal > 0) {
+    const now = new Date()
+    const daysInMonth = new Date(y, mo, 0).getDate()
+    const projected = Math.round((thisTotal / now.getDate()) * daysInMonth)
+    const pct = Math.round(projected / budget * 100)
+    if (pct > 110) {
+      insights.push({ emoji: '⚠️', headline: `On pace to overspend by ${pct - 100}%`, sub: `Projected ${sym}${projected.toLocaleString()} vs ${sym}${budget.toLocaleString()} budget`, good: false })
+    } else if (pct <= 85) {
+      insights.push({ emoji: '✅', headline: 'On track to stay under budget', sub: `Projected ${sym}${projected.toLocaleString()} of ${sym}${budget.toLocaleString()}`, good: true })
+    }
+  }
+
+  // Biggest category change
+  let biggestSpike = null
+  state.categories.forEach(cat => {
+    const t = thisBreakdown[cat.id] || 0
+    const l = lastBreakdown[cat.id] || 0
+    if (l > 5 && t > 5) {
+      const p = Math.round((t - l) / l * 100)
+      if (!biggestSpike || Math.abs(p) > Math.abs(biggestSpike.pct)) biggestSpike = { cat, pct: p, t, l }
+    }
+  })
+  if (biggestSpike && Math.abs(biggestSpike.pct) >= 25) {
+    const up = biggestSpike.pct > 0
+    insights.push({
+      icon: biggestSpike.cat.icon, iconColor: biggestSpike.cat.color,
+      headline: `${biggestSpike.cat.label} ${up ? 'up' : 'down'} ${Math.abs(biggestSpike.pct)}%`,
+      sub: `${sym}${Math.round(biggestSpike.t).toLocaleString()} vs ${sym}${Math.round(biggestSpike.l).toLocaleString()} last month`,
+      good: !up,
+    })
+  }
+
+  // Under-budget streak
+  if (budget > 0) {
+    let streak = 0
+    for (let i = 1; i <= 6; i++) {
+      const m = monthKey(new Date(y, mo - 1 - i, 1))
+      if ((totals[m] || 0) > 0 && (totals[m] || 0) < budget) streak++
+      else break
+    }
+    if (streak >= 2) insights.push({ emoji: '🔥', headline: `${streak} months under budget`, sub: streak >= 4 ? 'Incredible discipline!' : 'Keep it up!', good: true })
+  }
+
+  // Top category dominance
+  if (thisTotal > 0) {
+    const top = state.categories.map(c => ({ ...c, v: thisBreakdown[c.id] || 0 })).filter(c => c.v > 0).sort((a, b) => b.v - a.v)[0]
+    if (top) {
+      const pct = Math.round(top.v / thisTotal * 100)
+      if (pct >= 35) insights.push({ icon: top.icon, iconColor: top.color, headline: `${top.label} is ${pct}% of spending`, sub: `${sym}${Math.round(top.v).toLocaleString()} this month`, good: null })
+    }
+  }
+
+  // No-spend streak (current month only)
+  if (isCurrentMonth) {
+    const now = new Date()
+    let streak = 0
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+      const ds = d.toISOString().slice(0, 10)
+      if (state.expenses.some(e => !e.fixed && e.date.startsWith(ds))) break
+      streak++
+    }
+    if (streak >= 2) insights.push({ emoji: '💚', headline: `${streak} days without spending`, sub: streak >= 7 ? 'Remarkable streak!' : 'Nice streak!', good: true })
+  }
+
+  return insights
+}
+
+function InsightCard({ ins }) {
+  return (
+    <div style={{
+      flex: '0 0 auto', width: 158, padding: '14px 16px', borderRadius: 16,
+      background: ins.good === true ? 'color-mix(in oklab, var(--accent) 10%, var(--surface))'
+               : ins.good === false ? 'color-mix(in oklab, var(--alert) 10%, var(--surface))'
+               : 'var(--surface)',
+      border: '1px solid ' + (ins.good === true ? 'color-mix(in oklab, var(--accent) 30%, transparent)'
+                             : ins.good === false ? 'color-mix(in oklab, var(--alert) 30%, transparent)'
+                             : 'var(--line)'),
+    }}>
+      <div style={{ marginBottom: 8 }}>
+        {ins.emoji
+          ? <span style={{ fontSize: 22 }}>{ins.emoji}</span>
+          : <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + ins.iconColor + ' 15%, var(--surface))', display: 'inline-grid', placeItems: 'center' }}>
+              <Icon name={ins.icon} size={13} color={ins.iconColor} />
+            </span>
+        }
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, marginBottom: 4 }}>{ins.headline}</div>
+      <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.3 }}>{ins.sub}</div>
+    </div>
+  )
+}
+
 // ── Home ──────────────────────────────────────────────────────────────────────
 export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const store = useStore()
@@ -41,6 +162,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const [recentExpanded, setRecentExpanded] = React.useState(false)
   const recentVisible = recentExpanded ? recent : recent.slice(0, 6)
   const ringColor = overBudget ? 'var(--alert)' : pct > 0.85 ? 'var(--warn)' : 'var(--ink)'
+  const insights = React.useMemo(() => generateInsights(store.state, activeMonth), [store.state, activeMonth])
 
   return (
     <div className="stack gap-5">
@@ -110,6 +232,13 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           </div>
         </div>
       </div>
+
+      {/* Insights */}
+      {insights.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+          {insights.map((ins, i) => <InsightCard key={i} ins={ins} />)}
+        </div>
+      )}
 
       {/* Breakdown */}
       <div className="card">
