@@ -407,7 +407,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
       <div className="month-strip">
         {months.map(m => (
           <button key={m} className={'month-chip' + (m === mk ? ' active' : '')} onClick={() => setMk(m)}>
-            {monthShort(m)}
+            {monthShort(m)}{m === nowMonthKey() ? t('home.now') : ''}
           </button>
         ))}
       </div>
