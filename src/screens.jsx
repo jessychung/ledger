@@ -34,7 +34,9 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   if (budget > 0 && isCurrentMonth && thisTotal > 0) {
     const now = new Date()
     const daysInMonth = new Date(y, mo, 0).getDate()
-    const projected = Math.round((thisTotal / now.getDate()) * daysInMonth)
+    const variableTotal = totalsByMonth(state, false)[activeMonth] || 0
+    const fixedTotal = state.fixed.reduce((s, f) => s + f.amount, 0)
+    const projected = Math.round((variableTotal / now.getDate()) * daysInMonth) + fixedTotal
     const pct = Math.round(projected / budget * 100)
     if (pct > 110) {
       insights.push({ emoji: '⚠️', headline: t('insight.overspend', pct - 100), sub: t('insight.overspend_sub', sym, r(projected), r(budget)), good: false })
