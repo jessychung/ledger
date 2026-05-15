@@ -102,7 +102,7 @@ function App() {
         ))}
         <div style={{ height: 8 }} />
         <button
-          className="nav-item"
+          className="nav-item rainbow-btn"
           onClick={() => { setEditingExpense(null); setAddOpen(true) }}
           title={navCollapsed ? t('nav.new_expense') : ''}
           style={{ background: 'var(--accent)', color: 'var(--bg)', borderColor: 'var(--accent)', justifyContent: 'center', marginTop: 4, fontWeight: 500 }}>
@@ -133,7 +133,7 @@ function App() {
       </nav>
 
       {/* FAB (mobile) */}
-      <button className="fab" onClick={() => { setEditingExpense(null); setAddOpen(true) }} aria-label={t('nav.new_expense')}>
+      <button className="fab rainbow-btn" onClick={() => { setEditingExpense(null); setAddOpen(true) }} aria-label={t('nav.new_expense')}>
         <Icon name="plus" size={24} />
       </button>
 
