@@ -144,23 +144,12 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
       <div className="stack gap-3">
         <div className="between" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <div className="row gap-3" style={{ alignItems: 'center' }}>
-            <button className="btn ghost" style={{ padding: 8, borderRadius: '50%' }}
-              onClick={() => { const i = months.indexOf(activeMonth); if (i > 0) setActiveMonth(months[i - 1]) }}
-              disabled={months.indexOf(activeMonth) <= 0} aria-label={t('home.prev_month')}>
-              <Icon name="chevron-l" size={18} />
-            </button>
             <h1 className="h1" style={{ fontSize: 32, lineHeight: 1, letterSpacing: '-0.015em' }}>
               {monthLabel(activeMonth).split(' ')[0]}
               <span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>
                 {monthLabel(activeMonth).split(' ')[1]}
               </span>
             </h1>
-            <button className="btn ghost" style={{ padding: 8, borderRadius: '50%' }}
-              onClick={() => { const i = months.indexOf(activeMonth); if (i < months.length - 1) setActiveMonth(months[i + 1]) }}
-              disabled={activeMonth === nowMonthKey() || months.indexOf(activeMonth) >= months.length - 1}
-              aria-label={t('home.next_month')}>
-              <Icon name="chevron-r" size={18} />
-            </button>
           </div>
           {activeMonth !== nowMonthKey() && (
             <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }}
