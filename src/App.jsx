@@ -102,7 +102,7 @@ function App() {
         ))}
         <div style={{ height: 8 }} />
         <button
-          className="nav-item"
+          className="nav-item rainbow-btn"
           onClick={() => { setEditingExpense(null); setAddOpen(true) }}
           title={navCollapsed ? t('nav.new_expense') : ''}
           style={{ background: 'var(--accent)', color: 'var(--bg)', borderColor: 'var(--accent)', justifyContent: 'center', marginTop: 4, fontWeight: 500 }}>
