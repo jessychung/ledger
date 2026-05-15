@@ -144,8 +144,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
       <div className="stack gap-3">
         <div className="between" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <div className="label-eyebrow">{t('tab.home')}</div>
-            <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(activeMonth)}</h2>
+            <h2 className="h1">{monthLabel(activeMonth)}</h2>
           </div>
           {activeMonth !== nowMonthKey() && (
             <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }}
