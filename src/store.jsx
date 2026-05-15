@@ -264,6 +264,12 @@ export function StoreProvider({ children }) {
       }
     },
 
+    async reorderCategories(orderedIds) {
+      const reordered = orderedIds.map((id, i) => ({ ...state.categories.find(c => c.id === id), sort_order: i }))
+      setState(s => ({ ...s, categories: reordered }))
+      await Promise.all(orderedIds.map((id, i) => supabase.from('categories').update({ sort_order: i }).eq('id', id)))
+    },
+
     async deleteCategory(id) {
       if (state.categories.length <= 1) return
       const fallback = state.categories.find(c => c.id !== id)?.id

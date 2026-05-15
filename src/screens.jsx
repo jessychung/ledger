@@ -967,8 +967,22 @@ export function SettingsScreen() {
   const [editingCat, setEditingCat] = React.useState(null)
   const [showClearConfirm, setShowClearConfirm] = React.useState(false)
   const [clearInput, setClearInput] = React.useState('')
+  const [dragIdx, setDragIdx] = React.useState(null)
+  const [overIdx, setOverIdx] = React.useState(null)
 
   React.useEffect(() => { setBudgetDraft(String(s.budget)) }, [s.budget])
+
+  function handleCatDragStart(e, i) { e.dataTransfer.effectAllowed = 'move'; setDragIdx(i) }
+  function handleCatDragOver(e, i) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOverIdx(i) }
+  function handleCatDrop(i) {
+    if (dragIdx === null || dragIdx === i) return
+    const next = [...store.state.categories]
+    const [moved] = next.splice(dragIdx, 1)
+    next.splice(i, 0, moved)
+    store.reorderCategories(next.map(c => c.id))
+    setDragIdx(null); setOverIdx(null)
+  }
+  function handleCatDragEnd() { setDragIdx(null); setOverIdx(null) }
 
   return (
     <div className="stack gap-4">
@@ -1047,21 +1061,34 @@ export function SettingsScreen() {
           </button>
         </div>
         <div>
-          {store.state.categories.map(c => {
+          {store.state.categories.map((c, i) => {
             const usage = store.state.expenses.filter(e => e.category === c.id).length +
               store.state.fixed.filter(f => f.category === c.id).length
             return (
-              <button key={c.id} className="lrow" onClick={() => setEditingCat(c.id)}
-                style={{ background: 'none', border: 0, width: '100%', textAlign: 'left', cursor: 'pointer' }}>
-                <div className="ic" style={{ background: 'color-mix(in oklab, ' + c.color + ' 15%, var(--surface))' }}>
-                  <Icon name={c.icon} size={15} color={c.color} />
-                </div>
-                <div className="stack" style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{c.label}</div>
-                  <div className="meta">{t('settings.items', usage)}</div>
-                </div>
-                <div className="muted" style={{ fontSize: 12 }}>{t('settings.edit')}</div>
-              </button>
+              <div key={c.id}
+                draggable
+                onDragStart={e => handleCatDragStart(e, i)}
+                onDragOver={e => handleCatDragOver(e, i)}
+                onDrop={() => handleCatDrop(i)}
+                onDragEnd={handleCatDragEnd}
+                style={{
+                  opacity: dragIdx === i ? 0.35 : 1,
+                  borderTop: overIdx === i && dragIdx !== i ? '2px solid var(--ink)' : '2px solid transparent',
+                  transition: 'opacity 120ms',
+                }}>
+                <button className="lrow has-grip" onClick={() => setEditingCat(c.id)}
+                  style={{ background: 'none', border: 0, width: '100%', textAlign: 'left', cursor: 'pointer' }}>
+                  <Icon name="grip" size={14} color="var(--muted-2)" style={{ cursor: 'grab', flexShrink: 0 }} />
+                  <div className="ic" style={{ background: 'color-mix(in oklab, ' + c.color + ' 15%, var(--surface))' }}>
+                    <Icon name={c.icon} size={15} color={c.color} />
+                  </div>
+                  <div className="stack" style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{c.label}</div>
+                    <div className="meta">{t('settings.items', usage)}</div>
+                  </div>
+                  <div className="muted" style={{ fontSize: 12 }}>{t('settings.edit')}</div>
+                </button>
+              </div>
             )
           })}
         </div>
