@@ -348,9 +348,18 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
   const sym = store.state.settings.currencySymbol
 
   const months = React.useMemo(() => {
-    const set = new Set([nowMonthKey()])
-    for (const e of store.state.expenses) set.add(monthKey(e.date))
-    return [...set].sort().reverse()
+    const now = new Date()
+    const recent = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      recent.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
+    }
+    const recentSet = new Set(recent)
+    const older = [...new Set(store.state.expenses.map(e => monthKey(e.date)))]
+      .filter(m => !recentSet.has(m))
+      .sort()
+      .reverse()
+    return [...older, ...recent]
   }, [store.state.expenses])
 
   const items = expensesForMonth(store.state, mk, store.state.settings.includeFixedInTotal)
