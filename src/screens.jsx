@@ -377,23 +377,25 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
 
   return (
     <div className="stack gap-4">
-      <div className="between" style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="label-eyebrow">{t('activity.title')}</div>
-          <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk)}</h2>
+      <div className="stack gap-3">
+        <div className="between" style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="label-eyebrow">{t('activity.title')}</div>
+            <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk)}</h2>
+          </div>
+          <div className="stack" style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+            <div className="muted" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('home.total')}</div>
+            <div className="serif" style={{ fontSize: 38 }}>{sym}{Math.round(total).toLocaleString()}</div>
+          </div>
         </div>
-        <div className="stack" style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-          <div className="muted" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('home.total')}</div>
-          <div className="serif" style={{ fontSize: 38 }}>{sym}{Math.round(total).toLocaleString()}</div>
-        </div>
-      </div>
 
-      <div className="month-strip">
+        <div className="month-strip">
         {months.map(m => (
           <button key={m} className={'month-chip' + (m === mk ? ' active' : '')} onClick={() => setMk(m)}>
             {monthShort(m)}{m === nowMonthKey() ? t('home.now') : ''}
           </button>
         ))}
+        </div>
       </div>
 
       <div className="row gap-2" style={{ flexWrap: 'wrap' }}>
