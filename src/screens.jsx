@@ -663,7 +663,7 @@ export function TrendsScreen() {
 }
 
 // ── Expense form ──────────────────────────────────────────────────────────────
-export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
+export function ExpenseForm({ initial, onSave, onSaveAnother, onCancel, onDelete }) {
   const store = useStore()
   const t = useT()
   const [amount, setAmount] = React.useState(initial?.amount ? String(initial.amount) : '')
@@ -684,9 +684,21 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
     if (!subs.includes(subcategory)) setSubcategory('')
   }, [category])
 
+  function buildData() {
+    return { amount: Math.round(numAmount * 100) / 100, category, subcategory, note: note.trim(), date: new Date(date + 'T12:00:00').toISOString() }
+  }
+
   function submit() {
     if (!valid) return
-    onSave({ amount: Math.round(numAmount * 100) / 100, category, subcategory, note: note.trim(), date: new Date(date + 'T12:00:00').toISOString() })
+    onSave(buildData())
+  }
+
+  function submitAnother() {
+    if (!valid) return
+    onSaveAnother(buildData())
+    setAmount('')
+    setNote('')
+    setSubcategory('')
   }
 
   return (
@@ -741,7 +753,13 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
         <input className="input" value={note} onChange={e => setNote(e.target.value)} />
       </div>
 
-      <div className="row gap-2" style={{ marginTop: 6 }}>
+      <div className="stack gap-2" style={{ marginTop: 6 }}>
+        {onSaveAnother && (
+          <button className="btn" disabled={!valid} style={{ opacity: valid ? 1 : 0.4 }} onClick={submitAnother}>
+            {t('form.add_another')}
+          </button>
+        )}
+        <div className="row gap-2">
         <button className="btn primary" disabled={!valid} style={{ opacity: valid ? 1 : 0.4, flex: 1 }} onClick={submit}>
           {initial ? t('form.save') : t('form.add_expense')}
         </button>
@@ -750,6 +768,7 @@ export function ExpenseForm({ initial, onSave, onCancel, onDelete }) {
             <Icon name="trash" size={16} />
           </button>
         )}
+        </div>
       </div>
     </div>
   )

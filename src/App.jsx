@@ -153,6 +153,10 @@ function App() {
             setAddOpen(false)
             setEditingExpense(null)
           }}
+          onSaveAnother={!editingExpense ? (data) => {
+            store.addExpense(data)
+            showToast(t('toast.added'))
+          } : null}
           onDelete={editingExpense ? () => {
             store.deleteExpense(editingExpense.id)
             showToast(t('toast.deleted'))

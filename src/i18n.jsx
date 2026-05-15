@@ -80,7 +80,7 @@ const EN = {
   'form.category': 'Category', 'form.subcategory': 'Subcategory', 'form.date': 'Date', 'form.note': 'Note (optional)',
   'form.monthly': 'Monthly', 'form.yearly': 'Yearly',
   'form.save': 'Save changes', 'form.add': 'Add', 'form.cancel': 'Cancel',
-  'form.delete': 'Delete', 'form.add_expense': 'Add expense',
+  'form.delete': 'Delete', 'form.add_expense': 'Add expense', 'form.add_another': 'Add another',
 
   // Category form
   'cat.name': 'Name', 'cat.name_placeholder': 'e.g. Coffee',
@@ -206,7 +206,7 @@ const JA = {
   'form.category': 'カテゴリ', 'form.subcategory': 'サブカテゴリ', 'form.date': '日付', 'form.note': 'メモ（任意）',
   'form.monthly': '月払い', 'form.yearly': '年払い',
   'form.save': '保存', 'form.add': '追加', 'form.cancel': 'キャンセル',
-  'form.delete': '削除', 'form.add_expense': '支出を追加',
+  'form.delete': '削除', 'form.add_expense': '支出を追加', 'form.add_another': 'もう一つ追加',
 
   // Category form
   'cat.name': '名前', 'cat.name_placeholder': '例：コーヒー',
