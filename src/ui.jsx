@@ -21,6 +21,7 @@ export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) 
     case 'chevron-l':return <svg {...props}><path d="M15 18l-6-6 6-6"/></svg>
     case 'chevron-r':return <svg {...props}><path d="M9 18l6-6-6-6"/></svg>
     case 'chevron-d':return <svg {...props}><path d="M6 9l6 6 6-6"/></svg>
+    case 'chevron-u':return <svg {...props}><path d="M18 15l-6-6-6 6"/></svg>
     case 'x':        return <svg {...props}><path d="M18 6L6 18M6 6l12 12"/></svg>
     case 'trash':    return <svg {...props}><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
     case 'check':    return <svg {...props}><path d="M5 12l5 5L20 7"/></svg>

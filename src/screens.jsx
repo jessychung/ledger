@@ -325,7 +325,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
                 <button className="btn ghost" style={{ width: '100%', marginTop: 10, fontSize: 13, justifyContent: 'center' }}
                   onClick={() => setRecentExpanded(v => !v)}>
                   {recentExpanded ? t('home.show_less') : t('home.show_more', recent.length - 6)}
-                  <Icon name="chevron-d" size={14} />
+                  <Icon name={recentExpanded ? 'chevron-u' : 'chevron-d'} size={14} />
                 </button>
               )}
             </>
