@@ -240,7 +240,7 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>{cat.label}</span>
-            {expense.subcategory && <><span className="dot" /><span>{expense.subcategory}</span></>}
+            {expense.subcategory && expense.note && <><span className="dot" /><span>{expense.subcategory}</span></>}
             <span className="dot" />
             <span>{dateLabel}</span>
             {expense.fixed && <><span className="dot" /><span style={{ fontStyle: 'italic' }}>{t('fixed.monthly')}</span></>}
