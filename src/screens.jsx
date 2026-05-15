@@ -381,7 +381,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
         <div className="between" style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
           <div style={{ minWidth: 0 }}>
             <div className="label-eyebrow">{t('activity.title')}</div>
-            <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk)}</h2>
+            <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(mk).split(' ')[1]}</span></h2>
           </div>
           <div className="stack" style={{ alignItems: 'flex-end', flexShrink: 0 }}>
             <div className="muted" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('home.total')}</div>
@@ -523,7 +523,7 @@ export function TrendsScreen() {
       <div className="between">
         <div>
           <div className="label-eyebrow">{t('trends.title')}</div>
-          <h2 className="h1" style={{ marginTop: 4 }}>{period === 'monthly' ? t('trends.last6') : monthLabel(activeMonth)}</h2>
+          <h2 className="h1" style={{ marginTop: 4 }}>{period === 'monthly' ? t('trends.last6') : <>{monthLabel(activeMonth).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(activeMonth).split(' ')[1]}</span></>}</h2>
         </div>
         <div className="seg">
           <button className={period === 'monthly' ? 'on' : ''} onClick={() => setPeriod('monthly')}>{t('trends.monthly')}</button>
@@ -569,7 +569,7 @@ export function TrendsScreen() {
 
         <div className="card">
           <div className="between" style={{ marginBottom: 16 }}>
-            <h3 className="h3">{monthLabel(activeMonth)}</h3>
+            <h3 className="h3">{monthLabel(activeMonth).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(activeMonth).split(' ')[1]}</span></h3>
             <span className="muted" style={{ fontSize: 13 }}>{sym}{Math.round(activeTotal).toLocaleString()}</span>
           </div>
           {breakdownData.length === 0
