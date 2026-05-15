@@ -46,6 +46,7 @@ const EN = {
   'insight.dominance_sub': (sym, v) => `${sym}${v} this month`,
   'insight.no_spend': (n) => `${n} days without spending`,
   'insight.no_spend_sub': (n) => n >= 7 ? 'Remarkable streak!' : 'Nice streak!',
+  'insight.biggest': (sym, amt) => `Biggest expense: ${sym}${amt}`,
 
   // Activity
   'activity.title': 'Expenses',
@@ -178,6 +179,7 @@ const JA = {
   'insight.dominance_sub': (sym, v) => `今月 ${sym}${v}`,
   'insight.no_spend': (n) => `${n}日間ノー支出`,
   'insight.no_spend_sub': (n) => n >= 7 ? '驚きの記録！' : 'いい調子です！',
+  'insight.biggest': (sym, amt) => `最大支出: ${sym}${amt}`,
 
   // Activity
   'activity.title': '支出',

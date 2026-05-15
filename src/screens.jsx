@@ -94,6 +94,19 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
     if (streak >= 2) insights.push({ emoji: '💚', headline: t('insight.no_spend', streak), sub: t('insight.no_spend_sub', streak), good: true })
   }
 
+  const varExpenses = state.expenses.filter(e => monthKey(e.date) === activeMonth)
+  if (varExpenses.length >= 2) {
+    const biggest = varExpenses.reduce((a, b) => b.amount > a.amount ? b : a)
+    const bigCat = state.categories.find(c => c.id === biggest.category) || state.categories[state.categories.length - 1]
+    const pct = thisTotal > 0 ? Math.round(biggest.amount / thisTotal * 100) : 0
+    if (pct >= 10) insights.push({
+      icon: bigCat?.icon, iconColor: bigCat?.color,
+      headline: t('insight.biggest', sym, r(biggest.amount)),
+      sub: biggest.note || tcat(bigCat),
+      good: null,
+    })
+  }
+
   return insights
 }
 
