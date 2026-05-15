@@ -1,29 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap');
 
-@keyframes rainbow-spin {
-  to { --rainbow-angle: 360deg; }
-}
-@property --rainbow-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-.rainbow-btn {
-  position: relative;
-  isolation: isolate;
-  animation: rainbow-spin 3s linear infinite;
-}
-.rainbow-btn::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: conic-gradient(from var(--rainbow-angle),
-    #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #c77dff, #ff6b6b);
-  z-index: -1;
-  filter: blur(4px);
-  opacity: 0.85;
-}
+
 
 :root {
   --bg: #f5f2ec;
