@@ -1,6 +1,6 @@
 import React from 'react'
 import { monthShort } from './store'
-import { useT } from './i18n'
+import { useT, useTCat } from './i18n'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) => {
@@ -195,6 +195,7 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
 
 // ── Category chip ─────────────────────────────────────────────────────────────
 export function CategoryChip({ cat, selected, onClick }) {
+  const tcat = useTCat()
   return (
     <button type="button" onClick={onClick}
       style={{
@@ -215,7 +216,7 @@ export function CategoryChip({ cat, selected, onClick }) {
       }}>
         <Icon name={cat.icon} size={12} color={selected ? 'var(--bg)' : cat.color} />
       </span>
-      {cat.label}
+      {tcat(cat)}
     </button>
   )
 }
@@ -223,6 +224,7 @@ export function CategoryChip({ cat, selected, onClick }) {
 // ── Expense row ───────────────────────────────────────────────────────────────
 export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
   const t = useT()
+  const tcat = useTCat()
   const d = new Date(expense.date)
   const dateLabel = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
   const showCents = currency ? !['JPY','KRW','VND','CLP','HUF'].includes(currency) : true
@@ -237,10 +239,10 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
         </div>
         <div className="stack" style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {expense.note || expense.subcategory || cat.label}
+            {expense.note || expense.subcategory || tcat(cat)}
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>{cat.label}</span>
+            <span>{tcat(cat)}</span>
             {expense.subcategory && expense.note && <><span className="dot" /><span>{expense.subcategory}</span></>}
             <span className="dot" />
             <span>{dateLabel}</span>

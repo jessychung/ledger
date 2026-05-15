@@ -1,21 +1,21 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
-import { useT, useLang } from './i18n'
+import { useT, useLang, useTCat } from './i18n'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
 // ── Insights ──────────────────────────────────────────────────────────────────
-function generateInsights(state, activeMonth, t) {
+function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   const sym = state.settings.currencySymbol
   const budget = state.settings.budget
   const insights = []
   const [y, mo] = activeMonth.split('-').map(Number)
   const lastMonth = monthKey(new Date(y, mo - 2, 1))
-  const totals = totalsByMonth(state, false)
+  const totals = totalsByMonth(state, includeFixed)
   const thisTotal = totals[activeMonth] || 0
   const lastTotal = totals[lastMonth] || 0
-  const thisBreakdown = breakdownByCategory(state, activeMonth, false)
-  const lastBreakdown = breakdownByCategory(state, lastMonth, false)
+  const thisBreakdown = breakdownByCategory(state, activeMonth, includeFixed)
+  const lastBreakdown = breakdownByCategory(state, lastMonth, includeFixed)
   const isCurrentMonth = activeMonth === nowMonthKey()
   const r = (v) => Math.round(v).toLocaleString()
 
@@ -56,7 +56,7 @@ function generateInsights(state, activeMonth, t) {
     const up = biggestSpike.pct > 0
     insights.push({
       icon: biggestSpike.cat.icon, iconColor: biggestSpike.cat.color,
-      headline: up ? t('insight.cat_up', biggestSpike.cat.label, Math.abs(biggestSpike.pct)) : t('insight.cat_down', biggestSpike.cat.label, Math.abs(biggestSpike.pct)),
+      headline: up ? t('insight.cat_up', tcat(biggestSpike.cat), Math.abs(biggestSpike.pct)) : t('insight.cat_down', tcat(biggestSpike.cat), Math.abs(biggestSpike.pct)),
       sub: t('insight.cat_change_sub', sym, r(biggestSpike.tv), r(biggestSpike.lv)),
       good: !up,
     })
@@ -100,6 +100,7 @@ function generateInsights(state, activeMonth, t) {
 export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const store = useStore()
   const t = useT()
+  const tcat = useTCat()
   const [activeMonth, setActiveMonth] = React.useState(nowMonthKey())
   const [chartMode, setChartMode] = React.useState('donut')
   const [hoverIdx, setHoverIdx] = React.useState(null)
@@ -127,7 +128,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
 
   const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
   const breakdownData = store.state.categories
-    .map(c => ({ key: c.id, label: c.label, color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
+    .map(c => ({ key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
 
@@ -135,7 +136,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const [recentExpanded, setRecentExpanded] = React.useState(false)
   const recentVisible = recentExpanded ? recent : recent.slice(0, 6)
   const ringColor = overBudget ? 'var(--alert)' : pct > 0.85 ? 'var(--warn)' : 'var(--ink)'
-  const insights = React.useMemo(() => generateInsights(store.state, activeMonth, t), [store.state, activeMonth, t])
+  const insights = React.useMemo(() => generateInsights(store.state, activeMonth, t, includeFixed, tcat), [store.state, activeMonth, t, includeFixed, tcat])
 
   return (
     <div className="stack gap-5">
@@ -340,6 +341,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
 export function ActivityScreen({ initialMonth, onOpenExpense }) {
   const store = useStore()
   const t = useT()
+  const tcat = useTCat()
   const [mk, setMk] = React.useState(initialMonth || nowMonthKey())
   const [search, setSearch] = React.useState('')
   const [catFilter, setCatFilter] = React.useState('all')
@@ -412,7 +414,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
         <select className="select" style={{ flex: '0 0 auto', maxWidth: 200 }}
           value={catFilter} onChange={e => setCatFilter(e.target.value)}>
           <option value="all">{t('activity.all_cats')}</option>
-          {store.state.categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+          {store.state.categories.map(c => <option key={c.id} value={c.id}>{tcat(c)}</option>)}
         </select>
       </div>
 
@@ -452,6 +454,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
 export function TrendsScreen() {
   const store = useStore()
   const t = useT()
+  const tcat = useTCat()
   const sym = store.state.settings.currencySymbol
   const budget = store.state.settings.budget
   const includeFixed = store.state.settings.includeFixedInTotal
@@ -478,7 +481,7 @@ export function TrendsScreen() {
 
   const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
   const breakdownData = store.state.categories
-    .map(c => ({ key: c.id, label: c.label, color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
+    .map(c => ({ key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
 
@@ -509,10 +512,10 @@ export function TrendsScreen() {
     const byCategory = {}
     items.forEach(e => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount })
     return store.state.categories
-      .map(c => ({ key: c.id, label: c.label, color: c.color, icon: c.icon, value: byCategory[c.id] || 0 }))
+      .map(c => ({ key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: byCategory[c.id] || 0 }))
       .filter(d => d.value > 0)
       .sort((a, b) => b.value - a.value)
-  }, [effectiveDay, store.state.expenses, store.state.categories])
+  }, [effectiveDay, store.state.expenses, store.state.categories, tcat])
 
   const fmtDay = key => {
     if (!key) return ''
@@ -778,6 +781,7 @@ export function ExpenseForm({ initial, onSave, onSaveAnother, onCancel, onDelete
 export function FixedScreen() {
   const store = useStore()
   const t = useT()
+  const tcat = useTCat()
   const [editing, setEditing] = React.useState(null)
   const [sortMode, setSortMode] = React.useState('custom')
   const [customOrder, setCustomOrder] = React.useState(() => {
@@ -794,7 +798,7 @@ export function FixedScreen() {
     const items = [...store.state.fixed]
     if (sortMode === 'category') {
       return items.sort((a, b) =>
-        store.catById(a.category).label.localeCompare(store.catById(b.category).label)
+        tcat(store.catById(a.category)).localeCompare(tcat(store.catById(b.category)))
       )
     }
     if (customOrder) {
@@ -884,7 +888,7 @@ export function FixedScreen() {
                 </div>
                 <div className="stack" style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</div>
-                  <div className="meta">{cat.label} · {t('fixed.monthly')}</div>
+                  <div className="meta">{tcat(cat)} · {t('fixed.monthly')}</div>
                 </div>
                 <div className="amt">
                   {sym}{hasCents(store.state.settings.currency) ? f.amount.toFixed(2) : Math.round(f.amount).toLocaleString()}
@@ -961,6 +965,7 @@ function FixedForm({ initial, onSave, onDelete }) {
 export function SettingsScreen() {
   const store = useStore()
   const t = useT()
+  const tcat = useTCat()
   const { lang, setLang } = useLang()
   const s = store.state.settings
   const [budgetDraft, setBudgetDraft] = React.useState(String(s.budget))
@@ -1083,7 +1088,7 @@ export function SettingsScreen() {
                     <Icon name={c.icon} size={15} color={c.color} />
                   </div>
                   <div className="stack" style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{c.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{tcat(c)}</div>
                     <div className="meta">{t('settings.items', usage)}</div>
                   </div>
                   <div className="muted" style={{ fontSize: 12 }}>{t('settings.edit')}</div>

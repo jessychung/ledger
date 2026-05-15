@@ -124,6 +124,12 @@ const EN = {
 
   // UI
   'aria.close': 'Close',
+
+  // Built-in category names (fallback = DB label for custom categories)
+  'catname.groceries': 'Groceries', 'catname.dining': 'Dining out',
+  'catname.transport': 'Transport', 'catname.shopping': 'Shopping',
+  'catname.entertainment': 'Entertainment', 'catname.health': 'Health',
+  'catname.bills': 'Bills', 'catname.other': 'Other',
 }
 
 const JA = {
@@ -250,6 +256,12 @@ const JA = {
 
   // UI
   'aria.close': '閉じる',
+
+  // Built-in category names
+  'catname.groceries': '食料品', 'catname.dining': '外食',
+  'catname.transport': '交通費', 'catname.shopping': 'ショッピング',
+  'catname.entertainment': 'エンタメ', 'catname.health': '健康',
+  'catname.bills': '公共料金', 'catname.other': 'その他',
 }
 
 const STRINGS = { en: EN, ja: JA }
@@ -276,5 +288,16 @@ export function useT() {
   return (key, ...args) => {
     const val = STRINGS[lang]?.[key] ?? STRINGS.en[key] ?? key
     return typeof val === 'function' ? val(...args) : val
+  }
+}
+
+// Returns translated category label, falling back to the DB-stored label for custom categories
+export function useTCat() {
+  const t = useT()
+  return (cat) => {
+    if (!cat) return ''
+    const key = 'catname.' + cat.id
+    const v = t(key)
+    return v === key ? cat.label : v
   }
 }
