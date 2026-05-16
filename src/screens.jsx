@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
-import { useT, useLang, useTCat } from './i18n'
+import { useT, useLang, useTCat, useTriggerTranslate } from './i18n'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
 // ── Insights ──────────────────────────────────────────────────────────────────
@@ -978,6 +978,8 @@ export function SettingsScreen() {
   const t = useT()
   const tcat = useTCat()
   const { lang, setLang } = useLang()
+  const triggerTranslate = useTriggerTranslate()
+  React.useEffect(() => { triggerTranslate(store.state.categories) }, [store.state.categories])
   const s = store.state.settings
   const [budgetDraft, setBudgetDraft] = React.useState(String(s.budget))
   const [editingCat, setEditingCat] = React.useState(null)
@@ -1060,8 +1062,8 @@ export function SettingsScreen() {
         <div className="between">
           <div style={{ fontSize: 14, fontWeight: 500 }}>{t('settings.language')}</div>
           <div className="seg">
-            <button className={'seg-btn' + (lang === 'en' ? ' on' : '')} onClick={() => setLang('en')}>EN</button>
-            <button className={'seg-btn' + (lang === 'ja' ? ' on' : '')} onClick={() => setLang('ja')}>日本語</button>
+            <button className={'seg-btn' + (lang === 'en' ? ' on' : '')} onClick={() => setLang('en', store.state.categories)}>EN</button>
+            <button className={'seg-btn' + (lang === 'ja' ? ' on' : '')} onClick={() => setLang('ja', store.state.categories)}>日本語</button>
           </div>
         </div>
       </div>
