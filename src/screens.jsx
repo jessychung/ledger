@@ -19,13 +19,17 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   const isCurrentMonth = activeMonth === nowMonthKey()
   const r = (v) => Math.round(v).toLocaleString()
 
-  if (lastTotal > 0 && thisTotal > 0) {
-    const pct = Math.round((thisTotal - lastTotal) / lastTotal * 100)
+  const varTotals = totalsByMonth(state, false)
+  const thisVarTotal = varTotals[activeMonth] || 0
+  const lastVarTotal = varTotals[lastMonth] || 0
+
+  if (lastVarTotal > 0 && thisVarTotal > 0) {
+    const pct = Math.round((thisVarTotal - lastVarTotal) / lastVarTotal * 100)
     if (Math.abs(pct) >= 5) {
       insights.push({
         emoji: pct > 0 ? '📈' : '📉',
         headline: pct > 0 ? t('insight.mom_up', pct) : t('insight.mom_down', Math.abs(pct)),
-        sub: t('insight.mom_up_sub', sym, r(thisTotal), r(lastTotal)),
+        sub: t('insight.mom_up_sub', sym, r(thisVarTotal), r(lastVarTotal)),
         good: pct < 0,
       })
     }
