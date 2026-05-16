@@ -270,56 +270,59 @@ const STRINGS = { en: EN, ja: JA }
 
 const LANG_NAMES = { ja: 'Japanese' }
 
-async function autoTranslateCategories(categories, lang) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-  if (!apiKey || lang === 'en') return
-  const enDefaults = new Set(Object.values(STRINGS.en).filter(v => typeof v === 'string'))
-  const needsTranslation = categories.filter(c => {
-    const cached = localStorage.getItem(`ledger.cat-i18n.${c.id}.${lang}`)
-    if (cached) return false
-    const builtIn = STRINGS[lang]?.['catname.' + c.id]
-    if (builtIn) { localStorage.setItem(`ledger.cat-i18n.${c.id}.${lang}`, builtIn); return false }
-    return true
-  })
-  if (!needsTranslation.length) return
-  const labels = needsTranslation.map(c => c.label)
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true', 'content-type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', max_tokens: 200,
-        messages: [{ role: 'user', content: `Translate these expense category names to ${LANG_NAMES[lang]}. Reply with only a JSON array of translated strings in the same order, no explanation.\n${JSON.stringify(labels)}` }],
-      }),
-    })
-    const data = await res.json()
-    const translated = JSON.parse(data.content[0].text)
-    needsTranslation.forEach((c, i) => {
-      if (translated[i]) localStorage.setItem(`ledger.cat-i18n.${c.id}.${lang}`, translated[i])
-    })
-  } catch {}
-}
-
-const LangContext = React.createContext({ lang: 'en', setLang: () => {}, triggerTranslate: () => {} })
+const LangContext = React.createContext({ lang: 'en', setLang: () => {}, translations: {}, triggerTranslate: () => {} })
 
 export function LangProvider({ children }) {
   const [lang, setLangState] = React.useState(() => {
     try { return localStorage.getItem('ledger.lang') || 'en' } catch { return 'en' }
   })
-  const [categories, setCategories] = React.useState([])
+  const [translations, setTranslations] = React.useState(() => {
+    try {
+      const raw = localStorage.getItem('ledger.cat-translations')
+      return raw ? JSON.parse(raw) : {}
+    } catch { return {} }
+  })
 
-  function setLang(l, cats) {
+  function saveTranslations(t) {
+    setTranslations(t)
+    try { localStorage.setItem('ledger.cat-translations', JSON.stringify(t)) } catch {}
+  }
+
+  async function translate(categories, targetLang) {
+    if (targetLang === 'en') return
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+    if (!apiKey) return
+    const needsTranslation = categories.filter(c => !translations[`${c.id}.${targetLang}`])
+    if (!needsTranslation.length) return
+    try {
+      const labels = needsTranslation.map(c => c.label)
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001', max_tokens: 300,
+          messages: [{ role: 'user', content: `Translate these expense category names to ${LANG_NAMES[targetLang]}. Reply with only a JSON array of translated strings in the same order, no explanation.\n${JSON.stringify(labels)}` }],
+        }),
+      })
+      const data = await res.json()
+      const translated = JSON.parse(data.content[0].text)
+      const updated = { ...translations }
+      needsTranslation.forEach((c, i) => { if (translated[i]) updated[`${c.id}.${targetLang}`] = translated[i] })
+      saveTranslations(updated)
+    } catch {}
+  }
+
+  function setLang(l, categories) {
     setLangState(l)
     try { localStorage.setItem('ledger.lang', l) } catch {}
-    autoTranslateCategories(cats || categories, l)
+    if (categories) translate(categories, l)
   }
 
-  function triggerTranslate(cats) {
-    setCategories(cats)
-    autoTranslateCategories(cats, lang)
+  function triggerTranslate(categories) {
+    translate(categories, lang)
   }
 
-  return <LangContext.Provider value={{ lang, setLang, triggerTranslate }}>{children}</LangContext.Provider>
+  return <LangContext.Provider value={{ lang, setLang, translations, triggerTranslate }}>{children}</LangContext.Provider>
 }
 
 export function useLang() {
@@ -339,18 +342,15 @@ export function useT() {
   }
 }
 
-// Returns translated category label; uses AI-translated cache for custom labels
+// Returns translated category label; uses AI-translated cache for all categories
 export function useTCat() {
-  const { lang } = useLang()
-  const t = useT()
+  const { lang, translations } = React.useContext(LangContext)
   return (cat) => {
     if (!cat) return ''
-    const cached = localStorage.getItem(`ledger.cat-i18n.${cat.id}.${lang}`)
-    if (cached) return cached
-    const key = 'catname.' + cat.id
-    const enDefault = STRINGS.en[key]
-    if (enDefault && cat.label !== enDefault) return cat.label
-    const v = t(key)
-    return v === key ? cat.label : v
+    if (lang !== 'en') {
+      const cached = translations[`${cat.id}.${lang}`]
+      if (cached) return cached
+    }
+    return cat.label
   }
 }
