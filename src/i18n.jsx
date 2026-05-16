@@ -298,7 +298,8 @@ export function LangProvider({ children }) {
         }),
       })
       const data = await res.json()
-      const translated = JSON.parse(data.content[0].text)
+      const raw = data.content[0].text.replace(/```[a-z]*\n?/g, '').trim()
+      const translated = JSON.parse(raw)
       setTranslations(prev => {
         const updated = { ...prev }
         needsTranslation.forEach((c, i) => { if (translated[i]) updated[`${c.id}.${targetLang}`] = translated[i] })
