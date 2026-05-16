@@ -1064,7 +1064,6 @@ export function SettingsScreen() {
           <div className="seg">
             <button className={'seg-btn' + (lang === 'en' ? ' on' : '')} onClick={() => setLang('en', store.state.categories)}>EN</button>
             <button className={'seg-btn' + (lang === 'ja' ? ' on' : '')} onClick={() => setLang('ja', store.state.categories)}>日本語</button>
-            <button className={'seg-btn' + (lang === 'hk' ? ' on' : '')} onClick={() => setLang('hk', store.state.categories)}>廣東話</button>
           </div>
         </div>
       </div>
