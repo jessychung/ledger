@@ -1,6 +1,6 @@
 import React from 'react'
 import { monthShort } from './store'
-import { useT, useTCat } from './i18n'
+import { useT, useTCat, useTSubCat } from './i18n'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) => {
@@ -225,6 +225,7 @@ export function CategoryChip({ cat, selected, onClick }) {
 export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
   const t = useT()
   const tcat = useTCat()
+  const tsub = useTSubCat()
   const d = new Date(expense.date)
   const dateLabel = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
   const showCents = currency ? !['JPY','KRW','VND','CLP','HUF'].includes(currency) : true
@@ -239,11 +240,11 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
         </div>
         <div className="stack" style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {expense.note || expense.subcategory || tcat(cat)}
+            {expense.note || tsub(cat?.id, expense.subcategory) || tcat(cat)}
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>{tcat(cat)}</span>
-            {expense.subcategory && expense.note && <><span className="dot" /><span>{expense.subcategory}</span></>}
+            {expense.subcategory && expense.note && <><span className="dot" /><span>{tsub(cat?.id, expense.subcategory)}</span></>}
             <span className="dot" />
             <span>{dateLabel}</span>
             {expense.fixed && <><span className="dot" /><span style={{ fontStyle: 'italic' }}>{t('fixed.monthly')}</span></>}

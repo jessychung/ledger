@@ -287,15 +287,28 @@ export function LangProvider({ children }) {
     if (targetLang === 'en' || !categories.length) return
     const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
     if (!apiKey) return
-    const needsTranslation = categories.filter(c => !translationsRef.current[`${c.id}.${targetLang}`])
-    if (!needsTranslation.length) return
+
+    // Gather all strings needing translation: category labels + subcategory strings
+    const catItems = categories
+      .filter(c => !translationsRef.current[`${c.id}.${targetLang}`])
+      .map(c => ({ key: `${c.id}.${targetLang}`, label: c.label }))
+
+    const subItems = categories.flatMap(c =>
+      (c.subcategories || [])
+        .filter(s => !translationsRef.current[`sub.${c.id}.${s}.${targetLang}`])
+        .map(s => ({ key: `sub.${c.id}.${s}.${targetLang}`, label: s }))
+    )
+
+    const items = [...catItems, ...subItems]
+    if (!items.length) return
+
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true', 'content-type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001', max_tokens: 300,
-          messages: [{ role: 'user', content: `Translate these expense category names to ${LANG_NAMES[targetLang]}. Reply with only a JSON array of translated strings in the same order, no explanation.\n${JSON.stringify(needsTranslation.map(c => c.label))}` }],
+          model: 'claude-haiku-4-5-20251001', max_tokens: 500,
+          messages: [{ role: 'user', content: `Translate these expense category and subcategory names to ${LANG_NAMES[targetLang]}. Reply with only a JSON array of translated strings in the same order, no explanation.\n${JSON.stringify(items.map(i => i.label))}` }],
         }),
       })
       const data = await res.json()
@@ -303,11 +316,11 @@ export function LangProvider({ children }) {
       const translated = JSON.parse(raw)
       setTranslations(prev => {
         const updated = { ...prev }
-        needsTranslation.forEach((c, i) => { if (translated[i]) updated[`${c.id}.${targetLang}`] = translated[i] })
+        items.forEach((item, i) => { if (translated[i]) updated[item.key] = translated[i] })
         try { localStorage.setItem('ledger.cat-translations', JSON.stringify(updated)) } catch {}
         return updated
       })
-    } catch(e) { console.error('Category translation failed:', e) }
+    } catch(e) { console.error('Translation failed:', e) }
   }
 
   function setLang(l, categories) {
@@ -352,5 +365,18 @@ export function useTCat() {
       if (staticVal) return staticVal
     }
     return cat.label
+  }
+}
+
+// Returns translated subcategory label
+export function useTSubCat() {
+  const { lang, translations } = React.useContext(LangContext)
+  return (catId, subLabel) => {
+    if (!subLabel) return subLabel
+    if (lang !== 'en') {
+      const ai = translations[`sub.${catId}.${subLabel}.${lang}`]
+      if (ai) return ai
+    }
+    return subLabel
   }
 }

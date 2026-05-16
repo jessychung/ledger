@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
-import { useT, useLang, useTCat, useTriggerTranslate } from './i18n'
+import { useT, useLang, useTCat, useTSubCat, useTriggerTranslate } from './i18n'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
 // ── Insights ──────────────────────────────────────────────────────────────────
@@ -680,6 +680,7 @@ export function TrendsScreen() {
 export function ExpenseForm({ initial, onSave, onSaveAnother, onCancel, onDelete }) {
   const store = useStore()
   const t = useT()
+  const tsub = useTSubCat()
   const [amount, setAmount] = React.useState(initial?.amount ? String(initial.amount) : '')
   const [category, setCategory] = React.useState(initial?.category || store.state.categories[0]?.id || 'groceries')
   const [subcategory, setSubcategory] = React.useState(initial?.subcategory || '')
@@ -750,7 +751,7 @@ export function ExpenseForm({ initial, onSave, onSaveAnother, onCancel, onDelete
                   color: subcategory === s ? 'var(--bg)' : 'var(--ink-2)',
                   transition: 'all 160ms',
                 }}>
-                {s}
+                {tsub(category, s)}
               </button>
             ))}
           </div>
