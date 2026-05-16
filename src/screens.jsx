@@ -140,11 +140,13 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
     return arr
   }, [])
 
+  const fixedTotal = store.state.fixed.reduce((s, f) => s + f.amount, 0)
+  const effectiveBudget = budget > 0 ? (includeFixed ? budget : Math.max(0, budget - fixedTotal)) : 0
   const monthExpenses = expensesForMonth(store.state, activeMonth, includeFixed)
   const total = monthExpenses.reduce((s, e) => s + e.amount, 0)
-  const remaining = budget - total
-  const pct = budget > 0 ? total / budget : 0
-  const overBudget = total > budget
+  const remaining = effectiveBudget - total
+  const pct = effectiveBudget > 0 ? total / effectiveBudget : 0
+  const overBudget = total > effectiveBudget
 
   const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
   const breakdownData = store.state.categories
@@ -194,9 +196,9 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
               {showCents && <span className="cents">.{fmt(total, sym).cents}</span>}
             </div>
             <div className="row gap-3" style={{ flexWrap: 'wrap', color: 'var(--muted)', fontSize: 13 }}>
-              {budget > 0 && (overBudget
-                ? <span style={{ color: 'var(--alert)' }}>{t('home.over_budget', sym, Math.abs(remaining).toFixed(0), budget.toLocaleString())}</span>
-                : <span>{t('home.under_budget', sym, remaining.toFixed(0), budget.toLocaleString())}</span>
+              {effectiveBudget > 0 && (overBudget
+                ? <span style={{ color: 'var(--alert)' }}>{t('home.over_budget', sym, Math.abs(remaining).toFixed(0), effectiveBudget.toLocaleString())}</span>
+                : <span>{t('home.under_budget', sym, remaining.toFixed(0), effectiveBudget.toLocaleString())}</span>
               )}
               {includeFixed && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
