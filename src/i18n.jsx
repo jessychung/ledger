@@ -266,9 +266,142 @@ const JA = {
   'catname.bills': '公共料金', 'catname.other': 'その他',
 }
 
-const STRINGS = { en: EN, ja: JA }
+const HK = {
+  // Nav
+  'tab.home': '主頁', 'tab.expenses': '支出', 'tab.fixed': '固定',
+  'tab.trends': '趨勢', 'tab.settings': '設定',
+  'nav.new_expense': '新增支出', 'aria.toggle_sidebar': '切換側欄',
+  'loading': '載入中…',
 
-const LANG_NAMES = { ja: 'Japanese' }
+  // Sheets / toasts
+  'sheet.new_expense': '新增支出', 'sheet.edit_expense': '編輯支出',
+  'sheet.new_fixed': '新增固定支出', 'sheet.edit_fixed': '編輯固定支出',
+  'sheet.new_category': '新增類別', 'sheet.edit_category': '編輯類別',
+  'sheet.clear': '清除所有支出',
+  'toast.added': '已新增支出', 'toast.updated': '已更新支出', 'toast.deleted': '已刪除支出',
+
+  // Home
+  'home.spent_so_far': '今月支出', 'home.spent': '支出金額',
+  'home.over_budget': (sym, amt, budget) => `超出預算 ${sym}${amt}（預算 ${sym}${budget}）`,
+  'home.under_budget': (sym, rem, budget) => `預算 ${sym}${budget} 餘 ${sym}${rem}`,
+  'home.incl_fixed': '包含固定支出',
+  'home.jump_current': '返回今月',
+  'home.prev_month': '上個月', 'home.next_month': '下個月',
+  'home.now': ' · 今月',
+  'home.by_category': '按類別', 'home.donut': '圓餅圖', 'home.bars': '柱狀圖',
+  'home.total': '合計',
+  'home.recent': '最近支出', 'home.view_all': '查看全部',
+  'home.empty': '未有支出，撳 + 新增啦。',
+  'home.show_more': (n) => `再顯示 ${n} 筆`,
+  'home.show_less': '收起',
+
+  // Insights
+  'insight.mom_up': (pct) => `比上月多 ${pct}%`,
+  'insight.mom_up_sub': (sym, a, b) => `${sym}${a} 對比 ${sym}${b}`,
+  'insight.mom_down': (pct) => `比上月少 ${pct}%`,
+  'insight.overspend': (pct) => `預計超支 ${pct}%`,
+  'insight.overspend_sub': (sym, proj, budget) => `預計 ${sym}${proj}（預算 ${sym}${budget}）`,
+  'insight.on_track': '支出正常，預算夠用',
+  'insight.on_track_sub': (sym, proj, budget) => `預計 ${sym}${proj}（預算 ${sym}${budget}）`,
+  'insight.cat_up': (label, pct) => `${label} 增加咗 ${pct}%`,
+  'insight.cat_down': (label, pct) => `${label} 減少咗 ${pct}%`,
+  'insight.cat_change_sub': (sym, t, l) => `${sym}${t}（上月 ${sym}${l}）`,
+  'insight.streak': (n) => `連續 ${n} 個月守住預算`,
+  'insight.streak_sub': (n) => n >= 4 ? '非常自律！' : '繼續加油！',
+  'insight.dominance': (label, pct) => `${label} 佔支出 ${pct}%`,
+  'insight.dominance_sub': (sym, v) => `今月 ${sym}${v}`,
+  'insight.no_spend': (n) => `${n} 日冇消費`,
+  'insight.no_spend_sub': (n) => n >= 7 ? '好勁呀！' : '做得好！',
+  'insight.biggest': (sym, amt) => `最大支出：${sym}${amt}`,
+
+  // Activity
+  'activity.title': '支出',
+  'activity.search': '搜尋備註...',
+  'activity.all_cats': '所有類別',
+  'activity.empty': '冇符合嘅支出。',
+  'date.today': '今日', 'date.yesterday': '尋日',
+
+  // Trends
+  'trends.title': '趨勢', 'trends.last6': '過去 6 個月',
+  'trends.monthly': '按月', 'trends.daily': '按日',
+  'trends.monthly_spending': '每月支出',
+  'trends.daily_spending': '每日支出',
+  'trends.tap_hint': '撳柱形查看明細',
+  'trends.budget_label': (sym, v) => `預算 ${sym}${v}`,
+  'trends.average': '平均', 'trends.peak': '最高', 'trends.budget': '預算',
+  'trends.daily_avg': '日均', 'trends.peak_day': '最高日', 'trends.month_total': '月合計',
+  'trends.empty_month': '今月未有支出。', 'trends.empty_day': '今日未有支出。',
+
+  // Fixed
+  'fixed.eyebrow': '固定支出', 'fixed.heading': '定期支出',
+  'fixed.per_month': '每月',
+  'fixed.desc': '每月定期支出——租金、訂閱、健身室等。',
+  'fixed.custom': '自訂', 'fixed.category': '類別',
+  'fixed.empty': '未有固定支出。',
+  'fixed.monthly': '每月',
+  'fixed.add': '新增固定支出',
+
+  // Fixed form
+  'form.name': '名稱', 'form.name_placeholder': '例：租金',
+  'form.amount': '金額', 'form.amount_per_month': '每月金額',
+  'form.category': '類別', 'form.subcategory': '子類別', 'form.date': '日期', 'form.note': '備註（可選）',
+  'form.monthly': '每月', 'form.yearly': '每年',
+  'form.save': '儲存', 'form.add': '新增', 'form.cancel': '取消',
+  'form.delete': '刪除', 'form.add_expense': '新增支出', 'form.add_another': '再新增一筆',
+
+  // Category form
+  'cat.name': '名稱', 'cat.name_placeholder': '例：咖啡',
+  'cat.color': '顏色', 'cat.icon': '圖示',
+  'cat.generate': '生成', 'cat.generating': '生成中…', 'cat.try_again': '再試',
+  'cat.subcategories': '子類別', 'cat.sub_placeholder': '例：早餐',
+  'cat.add_sub': '新增', 'cat.remove_color': '移除顏色',
+  'cat.save': '儲存', 'cat.add': '新增類別', 'cat.delete': '刪除類別',
+
+  // Settings
+  'settings.title': '設定',
+  'settings.preferences': '基本設定',
+  'settings.budget': '每月預算',
+  'settings.budget_hint': '顯示於主頁進度環。',
+  'settings.currency': '貨幣',
+  'settings.include_fixed': '將固定支出納入月總計',
+  'settings.include_fixed_hint': '自動將租金、訂閱等加入每月合計。',
+  'settings.dark_mode': '深色模式',
+  'settings.dark_mode_hint': '夜間使用更舒適。',
+  'settings.language': '語言',
+  'settings.categories': '類別',
+  'settings.categories_hint': '新增支出時使用。',
+  'settings.data': '數據',
+  'settings.data_hint': '儲存於你嘅 Supabase 數據庫。',
+  'settings.clear': '清除所有支出',
+  'settings.clear_cannot_undo': '此操作不可撤銷',
+  'settings.clear_warning': (n) => `將永久刪除 ${n} 筆支出。固定支出同設定不受影響。`,
+  'settings.type_delete': '輸入 DELETE 確認',
+  'settings.delete_placeholder': 'DELETE',
+  'settings.delete_all': '刪除所有支出',
+  'settings.footer': 'Ledger · 個人支出管理 · v1',
+  'settings.items': (n) => `${n} 項`,
+  'settings.edit': '編輯 ›',
+  'settings.add': '新增',
+
+  // Category form extras
+  'cat.gen_error': '生成失敗，請再試。',
+  'cat.gen_no_key': '請喺 Vercel 新增 VITE_ANTHROPIC_API_KEY。',
+  'cat.delete_confirm': '確認刪除此類別？',
+  'cat.delete_confirm_used': (n) => `確認刪除此類別？${n} 項將被重新分配。`,
+
+  // UI
+  'aria.close': '關閉',
+
+  // Built-in category names
+  'catname.groceries': '食品雜貨', 'catname.dining': '外出用餐',
+  'catname.transport': '交通', 'catname.shopping': '購物',
+  'catname.entertainment': '娛樂', 'catname.health': '健康',
+  'catname.bills': '賬單', 'catname.other': '其他',
+}
+
+const STRINGS = { en: EN, ja: JA, hk: HK }
+
+const LANG_NAMES = { ja: 'Japanese', hk: 'Hong Kong Cantonese' }
 
 const LangContext = React.createContext({ lang: 'en', setLang: () => {}, translations: {}, triggerTranslate: () => {} })
 
