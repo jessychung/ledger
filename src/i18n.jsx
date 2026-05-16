@@ -299,6 +299,9 @@ export function useTCat() {
   return (cat) => {
     if (!cat) return ''
     const key = 'catname.' + cat.id
+    const enDefault = STRINGS.en[key]
+    // If user has renamed this category, always respect their custom label
+    if (enDefault && cat.label !== enDefault) return cat.label
     const v = t(key)
     return v === key ? cat.label : v
   }
