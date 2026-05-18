@@ -98,7 +98,7 @@ function rowToExpense(r) {
 }
 
 function rowToFixed(r) {
-  return { id: r.id, label: r.label, amount: Number(r.amount), category: r.category_id }
+  return { id: r.id, label: r.label, amount: Number(r.amount), category: r.category_id, sort_order: r.sort_order ?? 0 }
 }
 
 function rowToCategory(r) {
@@ -135,7 +135,7 @@ export function StoreProvider({ children }) {
     ] = await Promise.all([
       supabase.from('settings').select('*').eq('id', 1).single(),
       supabase.from('categories').select('*').order('sort_order'),
-      supabase.from('fixed_expenses').select('*'),
+      supabase.from('fixed_expenses').select('*').order('sort_order'),
       supabase.from('expenses').select('*').order('date', { ascending: false }),
     ])
     if (!settingsRow) {
@@ -182,8 +182,15 @@ export function StoreProvider({ children }) {
 
     async addFixed(f) {
       const id = uid()
-      setState(s => ({ ...s, fixed: [...s.fixed, { ...f, id }] }))
-      await supabase.from('fixed_expenses').insert({ id, label: f.label, amount: f.amount, category_id: f.category })
+      const sort_order = state.fixed.length
+      setState(s => ({ ...s, fixed: [...s.fixed, { ...f, id, sort_order }] }))
+      await supabase.from('fixed_expenses').insert({ id, label: f.label, amount: f.amount, category_id: f.category, sort_order })
+    },
+
+    async reorderFixed(orderedIds) {
+      const reordered = orderedIds.map((id, i) => ({ ...state.fixed.find(f => f.id === id), sort_order: i }))
+      setState(s => ({ ...s, fixed: reordered }))
+      await Promise.all(orderedIds.map((id, i) => supabase.from('fixed_expenses').update({ sort_order: i }).eq('id', id)))
     },
 
     async updateFixed(id, patch) {

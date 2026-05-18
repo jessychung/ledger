@@ -800,9 +800,6 @@ export function FixedScreen() {
   const tcat = useTCat()
   const [editing, setEditing] = React.useState(null)
   const [sortMode, setSortMode] = React.useState('custom')
-  const [customOrder, setCustomOrder] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('ledger.fixedOrder') || 'null') } catch { return null }
-  })
   const [dragIdx, setDragIdx] = React.useState(null)
   const [overIdx, setOverIdx] = React.useState(null)
 
@@ -817,21 +814,8 @@ export function FixedScreen() {
         tcat(store.catById(a.category)).localeCompare(tcat(store.catById(b.category)))
       )
     }
-    if (customOrder) {
-      items.sort((a, b) => {
-        const ai = customOrder.indexOf(a.id)
-        const bi = customOrder.indexOf(b.id)
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
-      })
-    }
-    return items
-  }, [store.state.fixed, sortMode, customOrder])
-
-  function saveOrder(items) {
-    const ids = items.map(f => f.id)
-    setCustomOrder(ids)
-    try { localStorage.setItem('ledger.fixedOrder', JSON.stringify(ids)) } catch {}
-  }
+    return items.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  }, [store.state.fixed, sortMode])
 
   function handleDragStart(e, i) {
     e.dataTransfer.effectAllowed = 'move'
@@ -847,7 +831,7 @@ export function FixedScreen() {
     const next = [...sortedFixed]
     const [moved] = next.splice(dragIdx, 1)
     next.splice(i, 0, moved)
-    saveOrder(next)
+    store.reorderFixed(next.map(f => f.id))
     setDragIdx(null)
     setOverIdx(null)
   }
