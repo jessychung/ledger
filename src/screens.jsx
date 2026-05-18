@@ -35,16 +35,16 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
     }
   }
 
-  if (budget > 0 && isCurrentMonth) {
+  if (budget > 0 && isCurrentMonth && thisTotal > 0) {
     const now = new Date()
     const daysInMonth = new Date(y, mo, 0).getDate()
     const variableTotal = totalsByMonth(state, false)[activeMonth] || 0
     const fixedTotal = state.fixed.reduce((s, f) => s + f.amount, 0)
     const projected = Math.round((variableTotal / now.getDate()) * daysInMonth) + fixedTotal
     const pct = Math.round(projected / budget * 100)
-    if (pct > 100) {
+    if (pct > 110) {
       insights.push({ emoji: '⚠️', headline: t('insight.overspend', pct - 100), sub: t('insight.overspend_sub', sym, r(projected), r(budget)), good: false })
-    } else {
+    } else if (pct <= 85) {
       insights.push({ emoji: '✅', headline: t('insight.on_track'), sub: t('insight.on_track_sub', sym, r(projected), r(budget)), good: true })
     }
   }
@@ -102,7 +102,9 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   if (varExpenses.length >= 2) {
     const biggest = varExpenses.reduce((a, b) => b.amount > a.amount ? b : a)
     const bigCat = state.categories.find(c => c.id === biggest.category) || state.categories[state.categories.length - 1]
-    insights.push({
+    const varTotal = varExpenses.reduce((s, e) => s + e.amount, 0)
+    const pct = varTotal > 0 ? Math.round(biggest.amount / varTotal * 100) : 0
+    if (pct >= 10) insights.push({
       icon: bigCat?.icon, iconColor: bigCat?.color,
       headline: t('insight.biggest', sym, r(biggest.amount)),
       sub: biggest.note || tcat(bigCat),
@@ -138,13 +140,11 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
     return arr
   }, [])
 
-  const fixedTotal = store.state.fixed.reduce((s, f) => s + f.amount, 0)
-  const effectiveBudget = budget > 0 ? (includeFixed ? budget : Math.max(0, budget - fixedTotal)) : 0
   const monthExpenses = expensesForMonth(store.state, activeMonth, includeFixed)
   const total = monthExpenses.reduce((s, e) => s + e.amount, 0)
-  const remaining = effectiveBudget - total
-  const pct = effectiveBudget > 0 ? total / effectiveBudget : 0
-  const overBudget = total > effectiveBudget
+  const remaining = budget - total
+  const pct = budget > 0 ? total / budget : 0
+  const overBudget = total > budget
 
   const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
   const breakdownData = store.state.categories
@@ -194,9 +194,9 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
               {showCents && <span className="cents">.{fmt(total, sym).cents}</span>}
             </div>
             <div className="row gap-3" style={{ flexWrap: 'wrap', color: 'var(--muted)', fontSize: 13 }}>
-              {effectiveBudget > 0 && (overBudget
-                ? <span style={{ color: 'var(--alert)' }}>{t('home.over_budget', sym, Math.abs(remaining).toFixed(0), effectiveBudget.toLocaleString())}</span>
-                : <span>{t('home.under_budget', sym, remaining.toFixed(0), effectiveBudget.toLocaleString())}</span>
+              {budget > 0 && (overBudget
+                ? <span style={{ color: 'var(--alert)' }}>{t('home.over_budget', sym, Math.abs(remaining).toFixed(0), budget.toLocaleString())}</span>
+                : <span>{t('home.under_budget', sym, remaining.toFixed(0), budget.toLocaleString())}</span>
               )}
               {includeFixed && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -800,6 +800,9 @@ export function FixedScreen() {
   const tcat = useTCat()
   const [editing, setEditing] = React.useState(null)
   const [sortMode, setSortMode] = React.useState('custom')
+  const [customOrder, setCustomOrder] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('ledger.fixedOrder') || 'null') } catch { return null }
+  })
   const [dragIdx, setDragIdx] = React.useState(null)
   const [overIdx, setOverIdx] = React.useState(null)
 
@@ -814,8 +817,21 @@ export function FixedScreen() {
         tcat(store.catById(a.category)).localeCompare(tcat(store.catById(b.category)))
       )
     }
-    return items.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-  }, [store.state.fixed, sortMode])
+    if (customOrder) {
+      items.sort((a, b) => {
+        const ai = customOrder.indexOf(a.id)
+        const bi = customOrder.indexOf(b.id)
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+      })
+    }
+    return items
+  }, [store.state.fixed, sortMode, customOrder])
+
+  function saveOrder(items) {
+    const ids = items.map(f => f.id)
+    setCustomOrder(ids)
+    try { localStorage.setItem('ledger.fixedOrder', JSON.stringify(ids)) } catch {}
+  }
 
   function handleDragStart(e, i) {
     e.dataTransfer.effectAllowed = 'move'
@@ -831,7 +847,7 @@ export function FixedScreen() {
     const next = [...sortedFixed]
     const [moved] = next.splice(dragIdx, 1)
     next.splice(i, 0, moved)
-    store.reorderFixed(next.map(f => f.id))
+    saveOrder(next)
     setDragIdx(null)
     setOverIdx(null)
   }

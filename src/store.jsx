@@ -98,7 +98,7 @@ function rowToExpense(r) {
 }
 
 function rowToFixed(r) {
-  return { id: r.id, label: r.label, amount: Number(r.amount), category: r.category_id, sort_order: r.sort_order ?? 0 }
+  return { id: r.id, label: r.label, amount: Number(r.amount), category: r.category_id }
 }
 
 function rowToCategory(r) {
@@ -135,7 +135,7 @@ export function StoreProvider({ children }) {
     ] = await Promise.all([
       supabase.from('settings').select('*').eq('id', 1).single(),
       supabase.from('categories').select('*').order('sort_order'),
-      supabase.from('fixed_expenses').select('*').order('sort_order'),
+      supabase.from('fixed_expenses').select('*'),
       supabase.from('expenses').select('*').order('date', { ascending: false }),
     ])
     if (!settingsRow) {
@@ -156,12 +156,7 @@ export function StoreProvider({ children }) {
     async addExpense(e) {
       const id = uid()
       setState(s => ({ ...s, expenses: [{ ...e, id }, ...s.expenses] }))
-      const { error } = await supabase.from('expenses').insert({ id, date: e.date, amount: e.amount, category_id: e.category, note: e.note || null, subcategory: e.subcategory || null })
-      if (error) {
-        console.error('addExpense failed:', error)
-        setState(s => ({ ...s, expenses: s.expenses.filter(ex => ex.id !== id) }))
-        throw error
-      }
+      await supabase.from('expenses').insert({ id, date: e.date, amount: e.amount, category_id: e.category, note: e.note || null, subcategory: e.subcategory || null })
     },
 
     async updateExpense(id, patch) {
@@ -182,15 +177,8 @@ export function StoreProvider({ children }) {
 
     async addFixed(f) {
       const id = uid()
-      const sort_order = state.fixed.length
-      setState(s => ({ ...s, fixed: [...s.fixed, { ...f, id, sort_order }] }))
-      await supabase.from('fixed_expenses').insert({ id, label: f.label, amount: f.amount, category_id: f.category, sort_order })
-    },
-
-    async reorderFixed(orderedIds) {
-      const reordered = orderedIds.map((id, i) => ({ ...state.fixed.find(f => f.id === id), sort_order: i }))
-      setState(s => ({ ...s, fixed: reordered }))
-      await Promise.all(orderedIds.map((id, i) => supabase.from('fixed_expenses').update({ sort_order: i }).eq('id', id)))
+      setState(s => ({ ...s, fixed: [...s.fixed, { ...f, id }] }))
+      await supabase.from('fixed_expenses').insert({ id, label: f.label, amount: f.amount, category_id: f.category })
     },
 
     async updateFixed(id, patch) {
