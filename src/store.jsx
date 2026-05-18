@@ -156,7 +156,12 @@ export function StoreProvider({ children }) {
     async addExpense(e) {
       const id = uid()
       setState(s => ({ ...s, expenses: [{ ...e, id }, ...s.expenses] }))
-      await supabase.from('expenses').insert({ id, date: e.date, amount: e.amount, category_id: e.category, note: e.note || null, subcategory: e.subcategory || null })
+      const { error } = await supabase.from('expenses').insert({ id, date: e.date, amount: e.amount, category_id: e.category, note: e.note || null, subcategory: e.subcategory || null })
+      if (error) {
+        console.error('addExpense failed:', error)
+        setState(s => ({ ...s, expenses: s.expenses.filter(ex => ex.id !== id) }))
+        throw error
+      }
     },
 
     async updateExpense(id, patch) {

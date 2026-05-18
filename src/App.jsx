@@ -142,20 +142,29 @@ function App() {
         <ExpenseForm
           initial={editingExpense}
           onCancel={() => setAddOpen(false)}
-          onSave={(data) => {
+          onSave={async (data) => {
             if (editingExpense) {
               store.updateExpense(editingExpense.id, data)
               showToast(t('toast.updated'))
             } else {
-              store.addExpense(data)
-              showToast(t('toast.added'))
+              try {
+                await store.addExpense(data)
+                showToast(t('toast.added'))
+              } catch {
+                showToast('Failed to save — check your connection')
+                return
+              }
             }
             setAddOpen(false)
             setEditingExpense(null)
           }}
-          onSaveAnother={!editingExpense ? (data) => {
-            store.addExpense(data)
-            showToast(t('toast.added'))
+          onSaveAnother={!editingExpense ? async (data) => {
+            try {
+              await store.addExpense(data)
+              showToast(t('toast.added'))
+            } catch {
+              showToast('Failed to save — check your connection')
+            }
           } : null}
           onDelete={editingExpense ? () => {
             store.deleteExpense(editingExpense.id)
