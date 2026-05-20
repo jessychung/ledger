@@ -261,8 +261,13 @@ export function Sheet({ open, onClose, title, children, top }) {
   const t = useT()
   React.useEffect(() => {
     if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
   }, [open, onClose])
   if (!open) return null
   return (
