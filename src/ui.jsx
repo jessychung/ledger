@@ -240,11 +240,12 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
         </div>
         <div className="stack" style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {expense.note || tsub(cat?.id, expense.subcategory) || tcat(cat)}
+            {tsub(cat?.id, expense.subcategory) || tcat(cat)}
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>{tcat(cat)}</span>
-            {expense.subcategory && expense.note && <><span className="dot" /><span>{tsub(cat?.id, expense.subcategory)}</span></>}
+            {expense.subcategory && <><span className="dot" /><span>{tsub(cat?.id, expense.subcategory)}</span></>}
+            {expense.note && <><span className="dot" /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{expense.note}</span></>}
             <span className="dot" />
             <span>{dateLabel}</span>
             {expense.fixed && <><span className="dot" /><span style={{ fontStyle: 'italic' }}>{t('fixed.monthly')}</span></>}
