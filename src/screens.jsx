@@ -35,16 +35,16 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
     }
   }
 
-  if (budget > 0 && isCurrentMonth && thisTotal > 0) {
+  if (budget > 0 && isCurrentMonth) {
     const now = new Date()
     const daysInMonth = new Date(y, mo, 0).getDate()
     const variableTotal = totalsByMonth(state, false)[activeMonth] || 0
     const fixedTotal = state.fixed.reduce((s, f) => s + f.amount, 0)
     const projected = Math.round((variableTotal / now.getDate()) * daysInMonth) + fixedTotal
     const pct = Math.round(projected / budget * 100)
-    if (pct > 110) {
+    if (pct > 100) {
       insights.push({ emoji: '⚠️', headline: t('insight.overspend', pct - 100), sub: t('insight.overspend_sub', sym, r(projected), r(budget)), good: false })
-    } else if (pct <= 85) {
+    } else {
       insights.push({ emoji: '✅', headline: t('insight.on_track'), sub: t('insight.on_track_sub', sym, r(projected), r(budget)), good: true })
     }
   }
@@ -102,12 +102,10 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   if (varExpenses.length >= 2) {
     const biggest = varExpenses.reduce((a, b) => b.amount > a.amount ? b : a)
     const bigCat = state.categories.find(c => c.id === biggest.category) || state.categories[state.categories.length - 1]
-    const varTotal = varExpenses.reduce((s, e) => s + e.amount, 0)
-    const pct = varTotal > 0 ? Math.round(biggest.amount / varTotal * 100) : 0
-    if (pct >= 10) insights.push({
+    insights.push({
       icon: bigCat?.icon, iconColor: bigCat?.color,
       headline: t('insight.biggest', sym, r(biggest.amount)),
-      sub: biggest.note || tcat(bigCat),
+      sub: tcat(bigCat),
       good: null,
     })
   }
