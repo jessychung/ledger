@@ -244,7 +244,6 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>{tcat(cat)}</span>
-            {expense.subcategory && <><span className="dot" /><span>{tsub(cat?.id, expense.subcategory)}</span></>}
             {expense.note && <><span className="dot" /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{expense.note}</span></>}
             <span className="dot" />
             <span>{dateLabel}</span>
