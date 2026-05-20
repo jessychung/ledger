@@ -179,7 +179,7 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
 @media (max-width: 860px) {
   .app-grid { grid-template-columns: 1fr; }
   .sidebar { display: none; }
-  .main { padding: 18px 16px calc(env(safe-area-inset-bottom) + 66px); }
+  .main { padding: 18px 16px calc(env(safe-area-inset-bottom) + 90px); }
   .mobile-only { display: block; }
 }
 
@@ -197,7 +197,7 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  padding: 8px 8px calc(4px + env(safe-area-inset-bottom));
   display: none;
   z-index: 50;
 }
