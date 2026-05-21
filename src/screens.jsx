@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
-import { useT, useLang, useTCat, useTSubCat, useTriggerTranslate } from './i18n'
+import { useT, useLang, useTCat, useTSubCat, useTFixed, useTriggerTranslate } from './i18n'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
 // ── Insights ──────────────────────────────────────────────────────────────────
@@ -798,6 +798,7 @@ export function FixedScreen() {
   const store = useStore()
   const t = useT()
   const tcat = useTCat()
+  const tfixed = useTFixed()
   const [editing, setEditing] = React.useState(null)
   const [sortMode, setSortMode] = React.useState('custom')
   const [dragIdx, setDragIdx] = React.useState(null)
@@ -887,7 +888,7 @@ export function FixedScreen() {
                   <Icon name={cat.icon} size={15} color={cat.color} />
                 </div>
                 <div className="stack" style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500 }}>{tfixed(f)}</div>
                   <div className="meta">{tcat(cat)} · {t('fixed.monthly')}</div>
                 </div>
                 <div className="amt">
@@ -968,7 +969,7 @@ export function SettingsScreen() {
   const tcat = useTCat()
   const { lang, setLang } = useLang()
   const triggerTranslate = useTriggerTranslate()
-  React.useEffect(() => { triggerTranslate(store.state.categories) }, [store.state.categories])
+  React.useEffect(() => { triggerTranslate(store.state.categories, store.state.fixed) }, [store.state.categories, store.state.fixed])
   const s = store.state.settings
   const [budgetDraft, setBudgetDraft] = React.useState(String(s.budget))
   const [editingCat, setEditingCat] = React.useState(null)
@@ -1051,8 +1052,8 @@ export function SettingsScreen() {
         <div className="between">
           <div style={{ fontSize: 14, fontWeight: 500 }}>{t('settings.language')}</div>
           <div className="seg">
-            <button className={'seg-btn' + (lang === 'en' ? ' on' : '')} onClick={() => setLang('en', store.state.categories)}>EN</button>
-            <button className={'seg-btn' + (lang === 'ja' ? ' on' : '')} onClick={() => setLang('ja', store.state.categories)}>日本語</button>
+            <button className={'seg-btn' + (lang === 'en' ? ' on' : '')} onClick={() => setLang('en', store.state.categories, store.state.fixed)}>EN</button>
+            <button className={'seg-btn' + (lang === 'ja' ? ' on' : '')} onClick={() => setLang('ja', store.state.categories, store.state.fixed)}>日本語</button>
           </div>
         </div>
       </div>

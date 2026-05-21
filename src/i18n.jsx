@@ -283,12 +283,12 @@ export function LangProvider({ children }) {
   const translationsRef = React.useRef(translations)
   translationsRef.current = translations
 
-  async function translate(categories, targetLang) {
+  async function translate(categories, fixed, targetLang) {
     if (targetLang === 'en' || !categories.length) return
     const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
     if (!apiKey) return
 
-    // Gather all strings needing translation: category labels + subcategory strings
+    // Gather all strings needing translation: category labels + subcategory strings + fixed expense labels
     const catItems = categories
       .filter(c => !translationsRef.current[`${c.id}.${targetLang}`])
       .map(c => ({ key: `${c.id}.${targetLang}`, label: c.label }))
@@ -299,7 +299,11 @@ export function LangProvider({ children }) {
         .map(s => ({ key: `sub.${c.id}.${s}.${targetLang}`, label: s }))
     )
 
-    const items = [...catItems, ...subItems]
+    const fixedItems = (fixed || [])
+      .filter(f => !translationsRef.current[`fixed.${f.id}.${targetLang}`])
+      .map(f => ({ key: `fixed.${f.id}.${targetLang}`, label: f.label }))
+
+    const items = [...catItems, ...subItems, ...fixedItems]
     if (!items.length) return
 
     try {
@@ -323,14 +327,14 @@ export function LangProvider({ children }) {
     } catch(e) { console.error('Translation failed:', e) }
   }
 
-  function setLang(l, categories) {
+  function setLang(l, categories, fixed) {
     setLangState(l)
     try { localStorage.setItem('ledger.lang', l) } catch {}
-    if (categories?.length) translate(categories, l)
+    if (categories?.length) translate(categories, fixed, l)
   }
 
-  function triggerTranslate(categories) {
-    if (categories?.length) translate(categories, lang)
+  function triggerTranslate(categories, fixed) {
+    if (categories?.length) translate(categories, fixed, lang)
   }
 
   return <LangContext.Provider value={{ lang, setLang, translations, triggerTranslate }}>{children}</LangContext.Provider>
@@ -365,6 +369,19 @@ export function useTCat() {
       if (staticVal) return staticVal
     }
     return cat.label
+  }
+}
+
+// Returns translated fixed expense label
+export function useTFixed() {
+  const { lang, translations } = React.useContext(LangContext)
+  return (fixed) => {
+    if (!fixed) return ''
+    if (lang !== 'en') {
+      const ai = translations[`fixed.${fixed.id}.${lang}`]
+      if (ai) return ai
+    }
+    return fixed.label
   }
 }
 
