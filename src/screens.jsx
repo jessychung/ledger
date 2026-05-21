@@ -973,6 +973,22 @@ export function SettingsScreen() {
   const s = store.state.settings
   const [budgetDraft, setBudgetDraft] = React.useState(String(s.budget))
   const [editingCat, setEditingCat] = React.useState(null)
+
+  function exportCSV() {
+    const rows = [['Date', 'Amount', 'Currency', 'Category', 'Subcategory', 'Note']]
+    const sorted = [...store.state.expenses].sort((a, b) => new Date(a.date) - new Date(b.date))
+    for (const e of sorted) {
+      const cat = store.catById(e.category)
+      const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`
+      rows.push([e.date.slice(0, 10), e.amount, s.currency, esc(cat.label), esc(e.subcategory || ''), esc(e.note || '')])
+    }
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    a.download = `ledger-export-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
   const [showClearConfirm, setShowClearConfirm] = React.useState(false)
   const [clearInput, setClearInput] = React.useState('')
   const [dragIdx, setDragIdx] = React.useState(null)
@@ -1124,6 +1140,9 @@ export function SettingsScreen() {
           <div style={{ fontSize: 14, fontWeight: 500 }}>{t('settings.data')}</div>
           <div className="muted" style={{ fontSize: 12 }}>{t('settings.data_hint')}</div>
         </div>
+        <button className="btn" onClick={exportCSV} disabled={store.state.expenses.length === 0}>
+          <Icon name="download" size={15} /> {t('settings.export')}
+        </button>
         <button className="btn danger" onClick={() => { setClearInput(''); setShowClearConfirm(true) }}>
           {t('settings.clear')}
         </button>

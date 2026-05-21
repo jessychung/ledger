@@ -24,6 +24,7 @@ export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) 
     case 'chevron-u':return <svg {...props}><path d="M18 15l-6-6-6 6"/></svg>
     case 'x':        return <svg {...props}><path d="M18 6L6 18M6 6l12 12"/></svg>
     case 'trash':    return <svg {...props}><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+    case 'download': return <svg {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     case 'check':    return <svg {...props}><path d="M5 12l5 5L20 7"/></svg>
     case 'shop':     return <svg {...props}><path d="M3 9h18l-1.5 11a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 9z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>
     case 'fork':     return <svg {...props}><path d="M7 2v8a3 3 0 0 0 6 0V2"/><path d="M10 10v12"/><path d="M17 2c-1.5 0-3 1.5-3 4s1.5 4 3 4v12"/></svg>
