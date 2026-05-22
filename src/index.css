@@ -391,7 +391,7 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
   scrollbar-width: none;
 }
 .month-strip::-webkit-scrollbar { display: none; }
-@media (max-width: 860px) { .month-strip { justify-content: flex-end; } }
+@media (max-width: 460px) { .month-strip { justify-content: flex-end; } }
 .month-chip {
   flex: 0 0 auto;
   padding: 8px 14px; border-radius: 999px;
