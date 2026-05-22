@@ -501,7 +501,7 @@ export function TrendsScreen() {
     .sort((a, b) => b.value - a.value)
 
   // ── Daily data ────────────────────────────────────────────────────────────
-  const { dayKeys, dayValues, dayLabels } = React.useMemo(() => {
+  const { dayKeys, dayValues, dayLabels, dayWeekends } = React.useMemo(() => {
     const [y, mo] = activeMonth.split('-').map(Number)
     const daysInMonth = new Date(y, mo, 0).getDate()
     const keys = [], values = [], labels = []
@@ -514,7 +514,8 @@ export function TrendsScreen() {
         .reduce((s, e) => s + e.amount, 0)
       values.push(total)
     }
-    return { dayKeys: keys, dayValues: values, dayLabels: labels }
+    const weekends = new Set(keys.filter(k => { const d = new Date(k); return d.getUTCDay() === 0 || d.getUTCDay() === 6 }))
+    return { dayKeys: keys, dayValues: values, dayLabels: labels, dayWeekends: weekends }
   }, [activeMonth, store.state.expenses])
 
   const dailyAvg = dayValues.reduce((s, v) => s + v, 0) / dayValues.filter(v => v > 0).length || 0
@@ -636,7 +637,7 @@ export function TrendsScreen() {
             </div>
           </div>
           <MonthBars months={dayKeys} values={dayValues} labels={dayLabels}
-            currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} />
+            currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} weekends={dayWeekends} />
         </div>
 
         <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>

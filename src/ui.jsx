@@ -158,7 +158,7 @@ function fmtBarVal(n, sym) {
 }
 
 // ── Month bars ────────────────────────────────────────────────────────────────
-export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey }) {
+export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey, weekends }) {
   const max = Math.max(...values, budget || 0, 1)
   const dense = months.length > 12
   return (
@@ -169,6 +169,7 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
         const isActive = mk === activeKey
         const overBudget = budget && v > budget
         const showLabel = v > 0 && (!dense || isActive)
+        const isWeekend = weekends?.has(mk)
         return (
           <button key={mk} onClick={() => onPick && onPick(mk)}
             style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'visible', position: 'relative', zIndex: isActive ? 1 : 0 }}>
@@ -179,12 +180,12 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
             </div>
             <div style={{
               width: '70%', maxWidth: 36, height: h,
-              background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
+              background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : isWeekend ? 'var(--accent)' : 'var(--ink-2)'),
               borderRadius: 4,
-              opacity: isActive ? 1 : 0.35,
+              opacity: isActive ? 1 : isWeekend ? 0.45 : 0.35,
               transition: 'all 200ms',
             }} />
-            <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : isWeekend ? 'var(--accent)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {labels ? labels[i] : monthShort(mk)}
             </div>
           </button>
