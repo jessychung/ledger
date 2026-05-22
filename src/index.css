@@ -386,11 +386,12 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
 .lrow .amt { font-variant-numeric: tabular-nums; font-weight: 500; }
 
 .month-strip {
-  display: flex; gap: 8px; overflow-x: auto; justify-content: flex-end;
+  display: flex; gap: 8px; overflow-x: auto;
   padding: 2px 2px 8px; margin: -2px -2px 8px;
   scrollbar-width: none;
 }
 .month-strip::-webkit-scrollbar { display: none; }
+@media (max-width: 860px) { .month-strip { justify-content: flex-end; } }
 .month-chip {
   flex: 0 0 auto;
   padding: 8px 14px; border-radius: 999px;
