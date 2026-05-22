@@ -164,7 +164,7 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
   const minBarWidth = dense ? 22 : 32
   const minTotalWidth = months.length * (minBarWidth + (dense ? 2 : 6))
   return (
-    <div style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 4px' }}>
+    <div style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 12px' }}>
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, minmax(${minBarWidth}px, 1fr))`, gap: dense ? 2 : 6, alignItems: 'end', height: 160, minWidth: minTotalWidth }}>
       {months.map((mk, i) => {
         const v = values[i]
