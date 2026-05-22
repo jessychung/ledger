@@ -386,7 +386,7 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
 .lrow .amt { font-variant-numeric: tabular-nums; font-weight: 500; }
 
 .month-strip {
-  display: flex; gap: 8px; overflow-x: auto;
+  display: flex; gap: 8px; overflow-x: auto; justify-content: flex-end;
   padding: 2px 2px 8px; margin: -2px -2px 8px;
   scrollbar-width: none;
 }
