@@ -180,14 +180,15 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
             </div>
             <div style={{
               width: '70%', maxWidth: 36, height: h,
-              background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : isWeekend ? 'var(--accent)' : 'var(--ink-2)'),
+              background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
               borderRadius: 4,
-              opacity: isActive ? 1 : isWeekend ? 0.45 : 0.35,
+              opacity: isActive ? 1 : 0.35,
               transition: 'all 200ms',
             }} />
-            <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : isWeekend ? 'var(--accent)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {labels ? labels[i] : monthShort(mk)}
             </div>
+            {isWeekend && <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: 0.5, marginTop: -2 }} />}
           </button>
         )
       })}
