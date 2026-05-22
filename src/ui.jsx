@@ -188,7 +188,7 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
             <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {labels ? labels[i] : monthShort(mk)}
             </div>
-            {isWeekend && <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: 0.5, marginTop: -2 }} />}
+            <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: isWeekend ? 0.5 : 0, marginTop: -2 }} />
           </button>
         )
       })}
