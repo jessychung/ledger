@@ -638,7 +638,7 @@ export function TrendsScreen() {
             </div>
           </div>
           <MonthBars months={dayKeys} values={dayValues} labels={dayLabels}
-            currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} weekends={dayWeekends} />
+            currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} weekends={dayWeekends} fixedBarWidth={28} />
         </div>
 
         <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>

@@ -158,14 +158,17 @@ function fmtBarVal(n, sym) {
 }
 
 // ── Month bars ────────────────────────────────────────────────────────────────
-export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey, weekends }) {
+export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey, weekends, fixedBarWidth }) {
   const max = Math.max(...values, budget || 0, 1)
   const dense = months.length > 12
-  const barWidth = dense ? 28 : 44
-  const totalWidth = months.length * (barWidth + (dense ? 2 : 6))
+  const gap = dense ? 2 : 6
+  const gridTemplate = fixedBarWidth
+    ? `repeat(${months.length}, ${fixedBarWidth}px)`
+    : `repeat(${months.length}, 1fr)`
+  const innerWidth = fixedBarWidth ? months.length * (fixedBarWidth + gap) : undefined
   return (
     <div style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 12px' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, ${barWidth}px)`, gap: dense ? 2 : 6, alignItems: 'end', height: 160, width: totalWidth }}>
+    <div style={{ display: 'grid', gridTemplateColumns: gridTemplate, gap, alignItems: 'end', height: 160, width: innerWidth }}>
       {months.map((mk, i) => {
         const v = values[i]
         const h = Math.max(2, (v / max) * 130)
