@@ -521,7 +521,8 @@ export function TrendsScreen() {
   const dailyAvg = dayValues.reduce((s, v) => s + v, 0) / dayValues.filter(v => v > 0).length || 0
   const dailyPeak = Math.max(...dayValues)
 
-  const effectiveDay = activeDay || dayKeys[dayKeys.length - 1]
+  const todayKey = nowMonthKey() === activeMonth ? new Date().toISOString().slice(0, 10) : null
+  const effectiveDay = activeDay || todayKey || dayKeys[dayKeys.length - 1]
   const dayTotal = dayValues[dayKeys.indexOf(effectiveDay)] || 0
   const dayBreakdown = React.useMemo(() => {
     const items = store.state.expenses.filter(e => !e.fixed && e.date.startsWith(effectiveDay))
