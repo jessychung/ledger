@@ -162,9 +162,52 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
   const max = Math.max(...values, budget || 0, 1)
   const dense = months.length > 12
   const gap = dense ? 2 : 6
+  const scrollRef = React.useRef(null)
+  const [canLeft, setCanLeft] = React.useState(false)
+  const [canRight, setCanRight] = React.useState(false)
+
+  React.useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !minBarWidth) return
+    const update = () => {
+      setCanLeft(el.scrollLeft > 0)
+      setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1)
+    }
+    update()
+    el.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+    return () => { el.removeEventListener('scroll', update); window.removeEventListener('resize', update) }
+  }, [minBarWidth, months.length])
+
+  React.useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !activeKey) return
+    const idx = months.indexOf(activeKey)
+    if (idx === -1) return
+    const barW = el.scrollWidth / months.length
+    const target = idx * barW - el.clientWidth / 2 + barW / 2
+    el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' })
+  }, [activeKey])
+
+  const scroll = (dir) => {
+    const el = scrollRef.current
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.6, behavior: 'smooth' })
+  }
+
   const innerMinWidth = minBarWidth ? months.length * (minBarWidth + gap) : undefined
   return (
-    <div style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 12px' }}>
+    <div style={{ position: 'relative' }}>
+    {minBarWidth && canLeft && (
+      <button onClick={() => scroll(-1)} style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', width: 28, height: 28, display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+        <Icon name="chevron-l" size={14} />
+      </button>
+    )}
+    {minBarWidth && canRight && (
+      <button onClick={() => scroll(1)} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', width: 28, height: 28, display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+        <Icon name="chevron-r" size={14} />
+      </button>
+    )}
+    <div ref={scrollRef} style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 12px' }}>
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap, alignItems: 'end', height: 160, minWidth: innerMinWidth }}>
       {months.map((mk, i) => {
         const v = values[i]
@@ -195,6 +238,7 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
           </button>
         )
       })}
+    </div>
     </div>
     </div>
   )
