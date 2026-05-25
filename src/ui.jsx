@@ -161,11 +161,11 @@ function fmtBarVal(n, sym) {
 export function MonthBars({ months, values, labels, budget, currencySym = '$', onPick, activeKey, weekends }) {
   const max = Math.max(...values, budget || 0, 1)
   const dense = months.length > 12
-  const minBarWidth = dense ? 22 : 32
-  const minTotalWidth = months.length * (minBarWidth + (dense ? 2 : 6))
+  const barWidth = dense ? 28 : 44
+  const totalWidth = months.length * (barWidth + (dense ? 2 : 6))
   return (
     <div style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 12px' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, minmax(${minBarWidth}px, 1fr))`, gap: dense ? 2 : 6, alignItems: 'end', height: 160, minWidth: minTotalWidth }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, ${barWidth}px)`, gap: dense ? 2 : 6, alignItems: 'end', height: 160, width: totalWidth }}>
       {months.map((mk, i) => {
         const v = values[i]
         const h = Math.max(2, (v / max) * 130)
