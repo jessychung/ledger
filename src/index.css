@@ -401,6 +401,17 @@ input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
 }
 .month-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
+.chart-chevron {
+  display: none;
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 50%;
+  width: 28px; height: 28px; place-items: center; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.chart-chevron-l { left: 0; }
+.chart-chevron-r { right: 0; }
+@media (min-width: 861px) { .chart-chevron { display: grid; } }
+
 /* Toast */
 .toast {
   position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom));

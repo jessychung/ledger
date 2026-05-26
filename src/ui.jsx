@@ -198,12 +198,12 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
   return (
     <div style={{ position: 'relative' }}>
     {minBarWidth && canLeft && (
-      <button onClick={() => scroll(-1)} style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', width: 28, height: 28, display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+      <button onClick={() => scroll(-1)} className="chart-chevron chart-chevron-l">
         <Icon name="chevron-l" size={14} />
       </button>
     )}
     {minBarWidth && canRight && (
-      <button onClick={() => scroll(1)} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', width: 28, height: 28, display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+      <button onClick={() => scroll(1)} className="chart-chevron chart-chevron-r">
         <Icon name="chevron-r" size={14} />
       </button>
     )}
