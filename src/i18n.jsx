@@ -13,6 +13,12 @@ const EN = {
   'sheet.new_category': 'New category', 'sheet.edit_category': 'Edit category',
   'sheet.clear': 'Clear all expenses',
   'toast.added': 'Expense added', 'toast.updated': 'Expense updated', 'toast.deleted': 'Expense deleted',
+  'report.eyebrow': 'Last day of the month', 'report.heading': 'Monthly Summary',
+  'report.top_category': 'Top category', 'report.biggest_expense': 'Biggest expense',
+  'report.daily_avg': 'Daily average', 'report.per_day': 'per day',
+  'report.no_spend_days': 'No-spend days', 'report.days': 'days',
+  'report.mom_up': (p) => `↑ ${p}% more than last month`,
+  'report.mom_down': (p) => `↓ ${p}% less than last month`,
 
   // Home
   'home.spent_so_far': 'Spent so far', 'home.spent': 'Spent',
@@ -147,6 +153,12 @@ const JA = {
   'sheet.new_category': 'カテゴリを追加', 'sheet.edit_category': 'カテゴリを編集',
   'sheet.clear': '支出をすべて削除',
   'toast.added': '支出を追加しました', 'toast.updated': '支出を更新しました', 'toast.deleted': '支出を削除しました',
+  'report.eyebrow': '月の最終日', 'report.heading': '月次サマリー',
+  'report.top_category': 'トップカテゴリ', 'report.biggest_expense': '最大の支出',
+  'report.daily_avg': '1日平均', 'report.per_day': '1日あたり',
+  'report.no_spend_days': '無支出日数', 'report.days': '日',
+  'report.mom_up': (p) => `↑ 先月より${p}%増`,
+  'report.mom_down': (p) => `↓ 先月より${p}%減`,
 
   // Home
   'home.spent_so_far': '今月の支出', 'home.spent': '支出額',

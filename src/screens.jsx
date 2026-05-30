@@ -158,6 +158,29 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const ringColor = overBudget ? 'var(--alert)' : pct > 0.85 ? 'var(--warn)' : 'var(--ink)'
   const insights = React.useMemo(() => generateInsights(store.state, activeMonth, t, includeFixed, tcat), [store.state, activeMonth, t, includeFixed, tcat])
 
+  const monthEndReport = React.useMemo(() => {
+    const now = new Date()
+    const [y, mo] = activeMonth.split('-').map(Number)
+    const lastDay = new Date(y, mo, 0).getDate()
+    if (activeMonth !== nowMonthKey() || now.getDate() !== lastDay) return null
+
+    const varExpenses = store.state.expenses.filter(e => monthKey(e.date) === activeMonth)
+    const varTotal = varExpenses.reduce((s, e) => s + e.amount, 0)
+    const lastMonth = monthKey(new Date(y, mo - 2, 1))
+    const lastVarTotal = totalsByMonth(store.state, false)[lastMonth] || 0
+    const topCat = store.state.categories.map(c => ({
+      ...c, v: varExpenses.filter(e => e.category === c.id).reduce((s, e) => s + e.amount, 0)
+    })).filter(c => c.v > 0).sort((a, b) => b.v - a.v)[0]
+    const biggest = varExpenses.length ? varExpenses.reduce((a, b) => b.amount > a.amount ? b : a) : null
+    const biggestCat = biggest ? store.catById(biggest.category) : null
+    const dailyAvg = varTotal / lastDay
+    const momDiff = lastVarTotal > 0 ? Math.round((varTotal - lastVarTotal) / lastVarTotal * 100) : null
+    const daysWithSpend = new Set(varExpenses.map(e => e.date.slice(0, 10))).size
+    const daysNoSpend = lastDay - daysWithSpend
+
+    return { varTotal, topCat, biggest, biggestCat, dailyAvg, momDiff, daysNoSpend }
+  }, [store.state, activeMonth])
+
   return (
     <div className="stack gap-5">
       {/* Month nav */}
@@ -210,6 +233,53 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           </div>
         </div>
       </div>
+
+      {/* Month-end report */}
+      {monthEndReport && (
+        <div className="card stack gap-3" style={{ borderColor: 'color-mix(in oklab, var(--accent) 40%, transparent)', background: 'color-mix(in oklab, var(--accent) 6%, var(--surface))' }}>
+          <div className="between" style={{ alignItems: 'center' }}>
+            <div>
+              <div className="label-eyebrow">{t('report.eyebrow')}</div>
+              <div style={{ fontWeight: 600, fontSize: 15, marginTop: 2 }}>{t('report.heading')}</div>
+            </div>
+            <span style={{ fontSize: 22 }}>📋</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {monthEndReport.topCat && (
+              <div className="card" style={{ padding: '10px 12px' }}>
+                <div className="muted" style={{ fontSize: 11 }}>{t('report.top_category')}</div>
+                <div style={{ fontWeight: 500, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span>{monthEndReport.topCat.icon && <Icon name={monthEndReport.topCat.icon} size={12} color={monthEndReport.topCat.color} />}</span>
+                  {tcat(monthEndReport.topCat)}
+                </div>
+                <div className="muted" style={{ fontSize: 12 }}>{sym}{Math.round(monthEndReport.topCat.v).toLocaleString()}</div>
+              </div>
+            )}
+            {monthEndReport.biggest && (
+              <div className="card" style={{ padding: '10px 12px' }}>
+                <div className="muted" style={{ fontSize: 11 }}>{t('report.biggest_expense')}</div>
+                <div style={{ fontWeight: 500, fontSize: 13, marginTop: 2 }}>{sym}{Math.round(monthEndReport.biggest.amount).toLocaleString()}</div>
+                <div className="muted" style={{ fontSize: 12 }}>{monthEndReport.biggest.note || tcat(monthEndReport.biggestCat)}</div>
+              </div>
+            )}
+            <div className="card" style={{ padding: '10px 12px' }}>
+              <div className="muted" style={{ fontSize: 11 }}>{t('report.daily_avg')}</div>
+              <div style={{ fontWeight: 500, fontSize: 13, marginTop: 2 }}>{sym}{Math.round(monthEndReport.dailyAvg).toLocaleString()}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{t('report.per_day')}</div>
+            </div>
+            <div className="card" style={{ padding: '10px 12px' }}>
+              <div className="muted" style={{ fontSize: 11 }}>{t('report.no_spend_days')}</div>
+              <div style={{ fontWeight: 500, fontSize: 13, marginTop: 2 }}>{monthEndReport.daysNoSpend}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{monthEndReport.momDiff !== null ? (monthEndReport.momDiff > 0 ? `↑ ${monthEndReport.momDiff}% vs last month` : `↓ ${Math.abs(monthEndReport.momDiff)}% vs last month`) : t('report.days')}</div>
+            </div>
+          </div>
+          {monthEndReport.momDiff !== null && (
+            <div style={{ fontSize: 13, color: monthEndReport.momDiff > 0 ? 'var(--alert)' : 'var(--accent)', fontWeight: 500, textAlign: 'center', paddingTop: 2 }}>
+              {monthEndReport.momDiff > 0 ? t('report.mom_up', monthEndReport.momDiff) : t('report.mom_down', Math.abs(monthEndReport.momDiff))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Insights */}
       {insights.length > 0 && (
