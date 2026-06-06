@@ -558,6 +558,9 @@ export function TrendsScreen() {
     return arr
   }, [])
 
+  const fixedTotal = store.state.fixed.reduce((s, f) => s + f.amount, 0)
+  const effectiveBudget = budget > 0 ? (includeFixed ? budget : Math.max(0, budget - fixedTotal)) : 0
+
   const totals = totalsByMonth(store.state, includeFixed)
   const trendValues = trendMonths.map(m => totals[m] || 0)
   const avg = trendValues.reduce((s, v) => s + v, 0) / trendValues.length
@@ -636,22 +639,22 @@ export function TrendsScreen() {
               <h3 className="h3">{t('trends.monthly_spending')}</h3>
               <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{t('trends.tap_hint')}</div>
             </div>
-            {budget > 0 && (
+            {effectiveBudget > 0 && (
               <div className="muted mono" style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 14, height: 1, background: 'var(--muted-2)', display: 'inline-block' }} />
-                {t('trends.budget_label', sym, budget.toLocaleString())}
+                {t('trends.budget_label', sym, effectiveBudget.toLocaleString())}
               </div>
             )}
           </div>
           <div style={{ position: 'relative' }}>
-            <MonthBars months={trendMonths} values={trendValues} budget={budget}
+            <MonthBars months={trendMonths} values={trendValues} budget={effectiveBudget}
               currencySym={sym} activeKey={activeMonth} onPick={setActiveMonth} />
-            {budget > 0 && (() => {
-              const max = Math.max(...trendValues, budget, 1)
+            {effectiveBudget > 0 && (() => {
+              const max = Math.max(...trendValues, effectiveBudget, 1)
               return (
                 <div style={{
                   position: 'absolute', left: 0, right: 0,
-                  top: 28 + (1 - budget / max) * 130,
+                  top: 28 + (1 - effectiveBudget / max) * 130,
                   height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none',
                 }} />
               )
@@ -662,7 +665,7 @@ export function TrendsScreen() {
         <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           <div className="stat"><div className="k">{t('trends.average')}</div><div className="v">{sym}{Math.round(avg).toLocaleString()}</div></div>
           <div className="stat"><div className="k">{t('trends.peak')}</div><div className="v">{sym}{Math.round(peak).toLocaleString()}</div></div>
-          <div className="stat"><div className="k">{t('trends.budget')}</div><div className="v">{budget > 0 ? sym + Math.round(budget).toLocaleString() : '—'}</div></div>
+          <div className="stat"><div className="k">{t('trends.budget')}</div><div className="v">{effectiveBudget > 0 ? sym + Math.round(effectiveBudget).toLocaleString() : '—'}</div></div>
         </div>
 
         <div className="card">
