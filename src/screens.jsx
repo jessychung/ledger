@@ -588,8 +588,14 @@ export function TrendsScreen() {
     return { dayKeys: keys, dayValues: values, dayLabels: labels, dayWeekends: weekends }
   }, [activeMonth, store.state.expenses])
 
-  const dailyAvg = dayValues.reduce((s, v) => s + v, 0) / dayValues.filter(v => v > 0).length || 0
+  const dailyTotal = dayValues.reduce((s, v) => s + v, 0)
+  const dailyAvg = dailyTotal / dayValues.filter(v => v > 0).length || 0
   const dailyPeak = Math.max(...dayValues)
+  const weeklyAvg = React.useMemo(() => {
+    const [y, mo] = activeMonth.split('-').map(Number)
+    const daysInMonth = new Date(y, mo, 0).getDate()
+    return dailyTotal / (daysInMonth / 7)
+  }, [dailyTotal, activeMonth])
 
   const todayKey = nowMonthKey() === activeMonth ? new Date().toISOString().slice(0, 10) : null
   const effectiveDay = activeDay || todayKey || dayKeys[dayKeys.length - 1]
@@ -711,9 +717,10 @@ export function TrendsScreen() {
             currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} weekends={dayWeekends} minBarWidth={26} />
         </div>
 
-        <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
           <div className="stat"><div className="k">{t('trends.daily_avg')}</div><div className="v">{sym}{Math.round(dailyAvg).toLocaleString()}</div></div>
           <div className="stat"><div className="k">{t('trends.peak_day')}</div><div className="v">{sym}{Math.round(dailyPeak).toLocaleString()}</div></div>
+          <div className="stat"><div className="k">{t('trends.weekly_avg')}</div><div className="v">{sym}{Math.round(weeklyAvg).toLocaleString()}</div></div>
           <div className="stat"><div className="k">{t('trends.month_total')}</div><div className="v">{sym}{Math.round(activeTotal).toLocaleString()}</div></div>
         </div>
 
