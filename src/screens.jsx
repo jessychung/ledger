@@ -131,12 +131,15 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const months = React.useMemo(() => {
     const arr = []
     const now = new Date()
+    const nowKey = nowMonthKey()
+    const expMonths = new Set(store.state.expenses.map(e => monthKey(e.date)))
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      arr.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
+      const m = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+      if (m === nowKey || expMonths.has(m)) arr.push(m)
     }
     return arr
-  }, [])
+  }, [store.state.expenses])
 
   const fixedTotal = store.state.fixed.reduce((s, f) => s + f.amount, 0)
   const effectiveBudget = budget > 0 ? (includeFixed ? budget : Math.max(0, budget - fixedTotal)) : 0
@@ -229,7 +232,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
             </div>
           </div>
           <div className="hero-ring">
-            <ArcGauge pct={Math.min(pct, 1)} size={170} color={ringColor} />
+            <ArcGauge pct={pct} size={170} color={ringColor} />
           </div>
         </div>
       </div>
@@ -433,7 +436,8 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
       .filter(m => !recentSet.has(m))
       .sort()
       .reverse()
-    return [...older, ...recent]
+    const expMonths = new Set(store.state.expenses.map(e => monthKey(e.date)))
+    return [...older, ...recent.filter(m => m === nowMonthKey() || expMonths.has(m))]
   }, [store.state.expenses])
 
   const items = expensesForMonth(store.state, mk, store.state.settings.includeFixedInTotal)
@@ -744,7 +748,7 @@ export function TrendsScreen() {
       </>) : (<>
         {/* Month picker for daily view */}
         <div className="month-strip">
-          {trendMonths.map(m => (
+          {trendMonths.filter(m => m === nowMonthKey() || (totals[m] || 0) > 0).map(m => (
             <button key={m} className={'month-chip' + (activeMonth === m ? ' active' : '')}
               onClick={() => { setActiveMonth(m); setActiveDay(null) }}>
               {monthShort(m)}
