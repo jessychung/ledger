@@ -125,6 +125,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const [hoverIdx, setHoverIdx] = React.useState(null)
   const [aiTipsCache, setAiTipsCache] = React.useState({})
   const [aiTipsLoading, setAiTipsLoading] = React.useState(false)
+  const [tipsOpen, setTipsOpen] = React.useState(false)
 
   const includeFixed = store.state.settings.includeFixedInTotal
   const sym = store.state.settings.currencySymbol
@@ -170,6 +171,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   }, [activeMonth, total, breakdownData])
 
   React.useEffect(() => {
+    if (!tipsOpen) return
     if (aiTipsCache[aiCacheKey] || aiTipsLoading) return
     if (total < 100 || breakdownData.length === 0) return
     const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
@@ -216,7 +218,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
         if (Array.isArray(tips) && tips.length > 0) setAiTipsCache(prev => ({ ...prev, [aiCacheKey]: tips }))
       } catch {}
     }).catch(() => {}).finally(() => setAiTipsLoading(false))
-  }, [aiCacheKey])
+  }, [aiCacheKey, tipsOpen])
 
   const aiTips = aiTipsCache[aiCacheKey]
 
@@ -370,29 +372,39 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
         </div>
       )}
 
-      {/* Smart tips */}
-      {(aiTips || aiTipsLoading) && (
-        <div className="card stack gap-3">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 15 }}>💡</span>
-            <span style={{ fontWeight: 600, fontSize: 14 }}>{t('insight.smart_tips')}</span>
-            {aiTipsLoading && <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 4 }}>{t('loading')}</span>}
-          </div>
-          {aiTips && (
-            <div className="stack" style={{ gap: 10 }}>
-              {aiTips.map((tip, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, fontSize: 13, lineHeight: 1.5 }}>
-                  <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>→</span>
-                  <span>{tip}</span>
-                </div>
-              ))}
+      {/* Smart tips accordion */}
+      {total > 100 && breakdownData.length > 0 && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <button
+            onClick={() => setTipsOpen(v => !v)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ fontSize: 15 }}>💡</span>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>{t('insight.smart_tips')}</span>
             </div>
-          )}
-          {aiTipsLoading && !aiTips && (
-            <div style={{ display: 'flex', gap: 5, padding: '2px 0' }}>
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--muted-2)', opacity: 0.6 }} />
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {aiTipsLoading && <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('loading')}</span>}
+              <Icon name={tipsOpen ? 'chevron-u' : 'chevron-d'} size={14} color="var(--muted)" />
+            </div>
+          </button>
+          {tipsOpen && (
+            <div style={{ padding: '0 16px 14px' }}>
+              {aiTips ? (
+                <div className="stack" style={{ gap: 10 }}>
+                  {aiTips.map((tip, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, fontSize: 13, lineHeight: 1.5 }}>
+                      <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>→</span>
+                      <span>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 5, padding: '4px 0' }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--muted-2)', opacity: 0.6 }} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
