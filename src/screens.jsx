@@ -723,13 +723,21 @@ export function TrendsScreen() {
                         </div>
                       </div>
                       {isExpanded && (
-                        <div className="stack gap-1" style={{ paddingLeft: 30, paddingBottom: 4 }}>
-                          {d.subs.map(s => (
-                            <div key={s.key} className="between" style={{ fontSize: 12 }}>
-                              <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
-                              <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
-                            </div>
-                          ))}
+                        <div className="stack gap-2" style={{ paddingLeft: 30, paddingBottom: 4 }}>
+                          {d.subs.map(s => {
+                            const subFrac = d.value > 0 ? s.value / d.value : 0
+                            return (
+                              <div key={s.key} className="stack" style={{ gap: 4 }}>
+                                <div className="between" style={{ fontSize: 12 }}>
+                                  <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
+                                  <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
+                                </div>
+                                <div className="bar-track" style={{ height: 4 }}>
+                                  <div className="bar-fill" style={{ width: subFrac * 100 + '%', background: 'color-mix(in oklab, ' + d.color + ' 55%, transparent)', transition: 'width 400ms' }} />
+                                </div>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
@@ -797,13 +805,21 @@ export function TrendsScreen() {
                         </div>
                       </div>
                       {isExpanded && (
-                        <div className="stack gap-1" style={{ paddingLeft: 30, paddingBottom: 4 }}>
-                          {d.subs.map(s => (
-                            <div key={s.key} className="between" style={{ fontSize: 12 }}>
-                              <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
-                              <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
-                            </div>
-                          ))}
+                        <div className="stack gap-2" style={{ paddingLeft: 30, paddingBottom: 4 }}>
+                          {d.subs.map(s => {
+                            const subFrac = d.value > 0 ? s.value / d.value : 0
+                            return (
+                              <div key={s.key} className="stack" style={{ gap: 4 }}>
+                                <div className="between" style={{ fontSize: 12 }}>
+                                  <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
+                                  <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
+                                </div>
+                                <div className="bar-track" style={{ height: 4 }}>
+                                  <div className="bar-fill" style={{ width: subFrac * 100 + '%', background: 'color-mix(in oklab, ' + d.color + ' 55%, transparent)', transition: 'width 400ms' }} />
+                                </div>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
