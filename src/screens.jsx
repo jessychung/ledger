@@ -720,7 +720,7 @@ export function TrendsScreen() {
             currencySym={sym} activeKey={effectiveDay} onPick={d => setActiveDay(d)} weekends={dayWeekends} minBarWidth={26} />
         </div>
 
-        <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        <div className="trends-stats-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
           <div className="stat"><div className="k">{t('trends.daily_avg')}</div><div className="v">{sym}{Math.round(dailyAvg).toLocaleString()}</div></div>
           <div className="stat"><div className="k">{t('trends.peak_day')}</div><div className="v">{sym}{Math.round(dailyPeak).toLocaleString()}</div></div>
           <div className="stat"><div className="k">{t('trends.weekly_avg')}</div><div className="v">{sym}{Math.round(weeklyAvg).toLocaleString()}</div></div>
