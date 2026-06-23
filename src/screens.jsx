@@ -540,12 +540,17 @@ export function TrendsScreen() {
   const store = useStore()
   const t = useT()
   const tcat = useTCat()
+  const tsub = useTSubCat()
   const sym = store.state.settings.currencySymbol
   const budget = store.state.settings.budget
   const includeFixed = store.state.settings.includeFixedInTotal
   const [period, setPeriod] = React.useState('monthly')
   const [activeMonth, setActiveMonth] = React.useState(nowMonthKey())
   const [activeDay, setActiveDay] = React.useState(null)
+  const [expandedCats, setExpandedCats] = React.useState(new Set())
+  function toggleCat(id) {
+    setExpandedCats(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
 
   // ── Monthly data ──────────────────────────────────────────────────────────
   const trendMonths = React.useMemo(() => {
@@ -568,8 +573,16 @@ export function TrendsScreen() {
   const activeTotal = trendValues[trendMonths.indexOf(activeMonth)] || 0
 
   const breakdown = breakdownByCategory(store.state, activeMonth, includeFixed)
+  const monthVarExps = store.state.expenses.filter(e => !e.fixed && monthKey(e.date) === activeMonth)
   const breakdownData = store.state.categories
-    .map(c => ({ key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0 }))
+    .map(c => {
+      const subMap = {}
+      monthVarExps.filter(e => e.category === c.id).forEach(e => {
+        if (e.subcategory) subMap[e.subcategory] = (subMap[e.subcategory] || 0) + e.amount
+      })
+      const subs = Object.entries(subMap).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v }))
+      return { key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0, subs }
+    })
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
 
@@ -606,9 +619,21 @@ export function TrendsScreen() {
   const dayBreakdown = React.useMemo(() => {
     const items = store.state.expenses.filter(e => !e.fixed && e.date.startsWith(effectiveDay))
     const byCategory = {}
-    items.forEach(e => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount })
+    const byCatSub = {}
+    items.forEach(e => {
+      byCategory[e.category] = (byCategory[e.category] || 0) + e.amount
+      if (e.subcategory) {
+        if (!byCatSub[e.category]) byCatSub[e.category] = {}
+        byCatSub[e.category][e.subcategory] = (byCatSub[e.category][e.subcategory] || 0) + e.amount
+      }
+    })
     return store.state.categories
-      .map(c => ({ key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: byCategory[c.id] || 0 }))
+      .map(c => {
+        const subs = byCatSub[c.id]
+          ? Object.entries(byCatSub[c.id]).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v }))
+          : []
+        return { key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: byCategory[c.id] || 0, subs }
+      })
       .filter(d => d.value > 0)
       .sort((a, b) => b.value - a.value)
   }, [effectiveDay, store.state.expenses, store.state.categories, tcat])
@@ -678,20 +703,37 @@ export function TrendsScreen() {
             : <div className="stack gap-3">
                 {breakdownData.map(d => {
                   const frac = activeTotal > 0 ? d.value / activeTotal : 0
+                  const isExpanded = expandedCats.has(d.key)
+                  const hasSubs = d.subs.length > 0
                   return (
                     <div key={d.key} className="stack gap-2">
-                      <div className="between">
-                        <div className="row gap-2">
-                          <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
-                            <Icon name={d.icon} size={12} color={d.color} />
-                          </span>
-                          <span style={{ fontSize: 14 }}>{d.label}</span>
+                      <div onClick={() => hasSubs && toggleCat(d.key)} style={{ cursor: hasSubs ? 'pointer' : 'default' }}>
+                        <div className="between" style={{ marginBottom: 6 }}>
+                          <div className="row gap-2">
+                            <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
+                              <Icon name={d.icon} size={12} color={d.color} />
+                            </span>
+                            <span style={{ fontSize: 14 }}>{d.label}</span>
+                          </div>
+                          <div className="row gap-2" style={{ alignItems: 'center' }}>
+                            <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                            {hasSubs && <Icon name={isExpanded ? 'chevron-u' : 'chevron-d'} size={12} color="var(--muted)" />}
+                          </div>
                         </div>
-                        <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                        <div className="bar-track">
+                          <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
+                        </div>
                       </div>
-                      <div className="bar-track">
-                        <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
-                      </div>
+                      {isExpanded && (
+                        <div className="stack gap-1" style={{ paddingLeft: 30, paddingBottom: 4 }}>
+                          {d.subs.map(s => (
+                            <div key={s.key} className="between" style={{ fontSize: 12 }}>
+                              <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
+                              <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -737,20 +779,37 @@ export function TrendsScreen() {
             : <div className="stack gap-3">
                 {dayBreakdown.map(d => {
                   const frac = dayTotal > 0 ? d.value / dayTotal : 0
+                  const isExpanded = expandedCats.has(d.key)
+                  const hasSubs = d.subs.length > 0
                   return (
                     <div key={d.key} className="stack gap-2">
-                      <div className="between">
-                        <div className="row gap-2">
-                          <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
-                            <Icon name={d.icon} size={12} color={d.color} />
-                          </span>
-                          <span style={{ fontSize: 14 }}>{d.label}</span>
+                      <div onClick={() => hasSubs && toggleCat(d.key)} style={{ cursor: hasSubs ? 'pointer' : 'default' }}>
+                        <div className="between" style={{ marginBottom: 6 }}>
+                          <div className="row gap-2">
+                            <span style={{ width: 22, height: 22, borderRadius: 6, background: 'color-mix(in oklab, ' + d.color + ' 15%, var(--surface))', display: 'grid', placeItems: 'center' }}>
+                              <Icon name={d.icon} size={12} color={d.color} />
+                            </span>
+                            <span style={{ fontSize: 14 }}>{d.label}</span>
+                          </div>
+                          <div className="row gap-2" style={{ alignItems: 'center' }}>
+                            <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                            {hasSubs && <Icon name={isExpanded ? 'chevron-u' : 'chevron-d'} size={12} color="var(--muted)" />}
+                          </div>
                         </div>
-                        <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
+                        <div className="bar-track">
+                          <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
+                        </div>
                       </div>
-                      <div className="bar-track">
-                        <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
-                      </div>
+                      {isExpanded && (
+                        <div className="stack gap-1" style={{ paddingLeft: 30, paddingBottom: 4 }}>
+                          {d.subs.map(s => (
+                            <div key={s.key} className="between" style={{ fontSize: 12 }}>
+                              <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
+                              <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
