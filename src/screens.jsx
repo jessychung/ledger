@@ -678,20 +678,8 @@ export function TrendsScreen() {
               </div>
             )}
           </div>
-          <div style={{ position: 'relative' }}>
-            <MonthBars months={trendMonths} values={trendValues} budget={effectiveBudget}
-              currencySym={sym} activeKey={activeMonth} onPick={setActiveMonth} />
-            {effectiveBudget > 0 && (() => {
-              const max = Math.max(...trendValues, effectiveBudget, 1)
-              return (
-                <div style={{
-                  position: 'absolute', left: 0, right: 0,
-                  top: 28 + (1 - effectiveBudget / max) * 130,
-                  height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none',
-                }} />
-              )
-            })()}
-          </div>
+          <MonthBars months={trendMonths} values={trendValues} budget={effectiveBudget}
+            currencySym={sym} activeKey={activeMonth} onPick={setActiveMonth} />
         </div>
 
         <div className="trends-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>

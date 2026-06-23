@@ -195,6 +195,8 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
   }
 
   const innerMinWidth = minBarWidth ? months.length * (minBarWidth + gap) : undefined
+  const PLOT = 130   // fixed-height bar plot area (px)
+  const LABEL_H = 16 // reserved space for the value label above each bar
   return (
     <div style={{ position: 'relative' }}>
     {minBarWidth && canLeft && (
@@ -207,37 +209,49 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
         <Icon name="chevron-r" size={14} />
       </button>
     )}
-    <div ref={scrollRef} style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '20px 4px 12px' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap, alignItems: 'end', height: 160, minWidth: innerMinWidth }}>
-      {months.map((mk, i) => {
-        const v = values[i]
-        const h = Math.max(2, (v / max) * 130)
-        const isActive = mk === activeKey
-        const overBudget = budget && v > budget
-        const showLabel = v > 0 && (!dense || isActive)
-        const isWeekend = weekends?.has(mk)
-        return (
-          <button key={mk} onClick={() => onPick && onPick(mk)}
-            style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'visible', position: 'relative', zIndex: isActive ? 1 : 0 }}>
-            <div style={{ fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums',
-              whiteSpace: 'nowrap', overflow: 'visible',
-              visibility: showLabel ? 'visible' : 'hidden' }}>
-              {fmtBarVal(v, currencySym)}
-            </div>
-            <div style={{
-              width: '70%', maxWidth: 36, height: h,
-              background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
-              borderRadius: 4,
-              opacity: isActive ? 1 : 0.35,
-              transition: 'all 200ms',
-            }} />
-            <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              {labels ? labels[i] : monthShort(mk)}
-            </div>
-            <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: isWeekend ? 0.5 : 0, marginTop: -2 }} />
-          </button>
-        )
-      })}
+    <div ref={scrollRef} style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', margin: '0 -4px', padding: '8px 4px 12px' }}>
+    <div style={{ position: 'relative', minWidth: innerMinWidth }}>
+      {budget > 0 && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0,
+          top: LABEL_H + (1 - budget / max) * PLOT,
+          height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none', zIndex: 2,
+        }} />
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap, alignItems: 'end' }}>
+        {months.map((mk, i) => {
+          const v = values[i]
+          const h = Math.max(2, (v / max) * PLOT)
+          const isActive = mk === activeKey
+          const overBudget = budget && v > budget
+          const showLabel = v > 0 && (!dense || isActive)
+          const isWeekend = weekends?.has(mk)
+          return (
+            <button key={mk} onClick={() => onPick && onPick(mk)}
+              style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'visible', position: 'relative', zIndex: isActive ? 1 : 0 }}>
+              <div style={{ height: LABEL_H, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums',
+                whiteSpace: 'nowrap', overflow: 'visible',
+                visibility: showLabel ? 'visible' : 'hidden' }}>
+                {fmtBarVal(v, currencySym)}
+              </div>
+              <div style={{ height: PLOT, width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <div style={{
+                  width: '70%', maxWidth: 36, height: h,
+                  background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
+                  borderRadius: 4,
+                  opacity: isActive ? 1 : 0.35,
+                  transition: 'all 200ms',
+                }} />
+              </div>
+              <div style={{ marginTop: 6, fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {labels ? labels[i] : monthShort(mk)}
+              </div>
+              <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: isWeekend ? 0.5 : 0, marginTop: 2 }} />
+            </button>
+          )
+        })}
+      </div>
     </div>
     </div>
     </div>
