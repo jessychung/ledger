@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { useStore, monthKey, monthLabel, monthShort, nowMonthKey, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
+import { useStore, monthKey, monthLabel, monthShort, monthParts, nowMonthKey, nowJST, fmt, hasCents, expensesForMonth, totalsByMonth, breakdownByCategory } from './store'
 import { useT, useLang, useTCat, useTSubCat, useTFixed, useTriggerTranslate } from './i18n'
 import { Icon, ArcGauge, Donut, MonthBars, CategoryChip, ExpenseRow, Sheet, Switch } from './ui'
 
@@ -36,7 +36,7 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   }
 
   if (budget > 0 && isCurrentMonth) {
-    const now = new Date()
+    const now = nowJST()
     const daysInMonth = new Date(y, mo, 0).getDate()
     const variableTotal = totalsByMonth(state, false)[activeMonth] || 0
     const fixedTotal = state.fixed.reduce((s, f) => s + f.amount, 0)
@@ -87,11 +87,11 @@ function generateInsights(state, activeMonth, t, includeFixed, tcat) {
   }
 
   if (isCurrentMonth) {
-    const now = new Date()
+    const now = nowJST()
     let streak = 0
     for (let i = 0; i < 30; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
-      const ds = d.toISOString().slice(0, 10)
+      const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
       if (state.expenses.some(e => !e.fixed && e.date.startsWith(ds))) break
       streak++
     }
@@ -120,6 +120,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const t = useT()
   const tcat = useTCat()
   const { lang } = useLang()
+  const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
   const [activeMonth, setActiveMonth] = React.useState(nowMonthKey())
   const [chartMode, setChartMode] = React.useState('donut')
   const [hoverIdx, setHoverIdx] = React.useState(null)
@@ -134,7 +135,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
 
   const months = React.useMemo(() => {
     const arr = []
-    const now = new Date()
+    const now = nowJST()
     const nowKey = nowMonthKey()
     const expMonths = new Set(store.state.expenses.map(e => monthKey(e.date)))
     for (let i = 5; i >= 0; i--) {
@@ -161,7 +162,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
 
   const daysLeft = React.useMemo(() => {
     if (activeMonth !== nowMonthKey()) return null
-    const now = new Date()
+    const now = nowJST()
     const [y, mo] = activeMonth.split('-').map(Number)
     return new Date(y, mo, 0).getDate() - now.getDate()
   }, [activeMonth])
@@ -230,7 +231,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const aiTips = aiTipsCache[aiCacheKey]
 
   const monthEndReport = React.useMemo(() => {
-    const now = new Date()
+    const now = nowJST()
     const [y, mo] = activeMonth.split('-').map(Number)
     const lastDay = new Date(y, mo, 0).getDate()
     if (activeMonth !== nowMonthKey() || now.getDate() !== lastDay) return null
@@ -258,7 +259,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
       <div className="stack gap-3">
         <div className="between" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <h2 className="h1">{monthLabel(activeMonth).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(activeMonth).split(' ')[1]}</span></h2>
+            <h2 className="h1">{monthParts(activeMonth, locale).month}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthParts(activeMonth, locale).year}</span></h2>
           </div>
           {activeMonth !== nowMonthKey() && (
             <button className="btn" style={{ padding: '6px 14px', fontSize: 13 }}
@@ -271,7 +272,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
           {months.map(m => (
             <button key={m} className={'month-chip' + (m === activeMonth ? ' active' : '')}
               onClick={() => setActiveMonth(m)}>
-              {monthShort(m)}{m === nowMonthKey() ? t('home.now') : ''}
+              {monthShort(m, locale)}{m === nowMonthKey() ? t('home.now') : ''}
             </button>
           ))}
         </div>
@@ -533,6 +534,8 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
   const store = useStore()
   const t = useT()
   const tcat = useTCat()
+  const { lang } = useLang()
+  const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
   const [mk, setMk] = React.useState(initialMonth || nowMonthKey())
   const [search, setSearch] = React.useState('')
   const [catFilter, setCatFilter] = React.useState('all')
@@ -563,20 +566,21 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
   const total = items.reduce((s, e) => s + e.amount, 0)
 
   const grouped = React.useMemo(() => {
-    const today = new Date(); today.setHours(0,0,0,0)
-    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1)
+    const now = nowJST()
+    const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0')
+    const yest = new Date(now); yest.setDate(yest.getDate() - 1)
+    const yesterdayStr = yest.getFullYear() + '-' + String(yest.getMonth()+1).padStart(2,'0') + '-' + String(yest.getDate()).padStart(2,'0')
     const groups = []
     let cur = null
     for (const e of items) {
-      const d = new Date(e.date); d.setHours(0,0,0,0)
-      const key = d.toDateString()
-      if (key !== cur) {
-        cur = key
+      const dateStr = e.date.slice(0, 10)
+      if (dateStr !== cur) {
+        cur = dateStr
         let label
-        if (d.getTime() === today.getTime()) label = t('date.today')
-        else if (d.getTime() === yesterday.getTime()) label = t('date.yesterday')
-        else label = d.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
-        groups.push({ key, label, items: [] })
+        if (dateStr === todayStr) label = t('date.today')
+        else if (dateStr === yesterdayStr) label = t('date.yesterday')
+        else label = new Date(dateStr + 'T12:00:00').toLocaleString(locale, { weekday: 'short', month: 'short', day: 'numeric' })
+        groups.push({ key: dateStr, label, items: [] })
       }
       groups[groups.length - 1].items.push(e)
     }
@@ -589,7 +593,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
         <div className="between" style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
           <div style={{ minWidth: 0 }}>
             <div className="label-eyebrow">{t('activity.title')}</div>
-            <h2 className="h1" style={{ marginTop: 4 }}>{monthLabel(mk).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(mk).split(' ')[1]}</span></h2>
+            <h2 className="h1" style={{ marginTop: 4 }}>{monthParts(mk, locale).month}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthParts(mk, locale).year}</span></h2>
           </div>
           <div className="stack" style={{ alignItems: 'flex-end', flexShrink: 0 }}>
             <div className="muted" style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('home.total')}</div>
@@ -635,7 +639,7 @@ export function ActivityScreen({ initialMonth, onOpenExpense }) {
                     {group.label}
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
-                    {sym}{group.items.reduce((s, e) => s + e.amount, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {sym}{group.items.reduce((s, e) => s + e.amount, 0).toLocaleString(locale, { maximumFractionDigits: 0 })}
                   </span>
                 </div>
                 <div style={{ padding: '0 18px' }}>
@@ -659,6 +663,8 @@ export function TrendsScreen() {
   const t = useT()
   const tcat = useTCat()
   const tsub = useTSubCat()
+  const { lang } = useLang()
+  const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
   const sym = store.state.settings.currencySymbol
   const budget = store.state.settings.budget
   const includeFixed = store.state.settings.includeFixedInTotal
@@ -673,7 +679,7 @@ export function TrendsScreen() {
   // ── Monthly data ──────────────────────────────────────────────────────────
   const trendMonths = React.useMemo(() => {
     const arr = []
-    const now = new Date()
+    const now = nowJST()
     const nowKey = nowMonthKey()
     const expMonths = new Set(store.state.expenses.map(e => monthKey(e.date)))
     for (let i = 5; i >= 0; i--) {
@@ -737,7 +743,11 @@ export function TrendsScreen() {
     return dailyTotal / (daysInMonth / 7)
   }, [dailyTotal, activeMonth])
 
-  const todayKey = nowMonthKey() === activeMonth ? new Date().toISOString().slice(0, 10) : null
+  const todayKey = React.useMemo(() => {
+    if (nowMonthKey() !== activeMonth) return null
+    const d = nowJST()
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
+  }, [activeMonth])
   const effectiveDay = activeDay || todayKey || dayKeys[dayKeys.length - 1]
   const dayTotal = dayValues[dayKeys.indexOf(effectiveDay)] || 0
   const dayBreakdown = React.useMemo(() => {
@@ -769,7 +779,7 @@ export function TrendsScreen() {
   const fmtDay = key => {
     if (!key) return ''
     const d = new Date(key + 'T12:00:00')
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    return d.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
   }
 
   return (
@@ -777,7 +787,7 @@ export function TrendsScreen() {
       <div className="between">
         <div>
           <div className="label-eyebrow">{t('trends.title')}</div>
-          <h2 className="h1" style={{ marginTop: 4 }}>{period === 'monthly' ? t('trends.last6') : <>{monthLabel(activeMonth).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(activeMonth).split(' ')[1]}</span></>}</h2>
+          <h2 className="h1" style={{ marginTop: 4 }}>{period === 'monthly' ? t('trends.last6') : <>{monthParts(activeMonth, locale).month}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthParts(activeMonth, locale).year}</span></>}</h2>
         </div>
         <div className="seg">
           <button className={period === 'monthly' ? 'on' : ''} onClick={() => setPeriod('monthly')}>{t('trends.monthly')}</button>
@@ -811,7 +821,7 @@ export function TrendsScreen() {
 
         <div className="card">
           <div className="between" style={{ marginBottom: 16 }}>
-            <h3 className="h3">{monthLabel(activeMonth).split(' ')[0]}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthLabel(activeMonth).split(' ')[1]}</span></h3>
+            <h3 className="h3">{monthParts(activeMonth, locale).month}<span className="muted" style={{ marginLeft: 8, fontSize: '0.75em' }}>{monthParts(activeMonth, locale).year}</span></h3>
             <span className="muted" style={{ fontSize: 13 }}>{sym}{Math.round(activeTotal).toLocaleString()}</span>
           </div>
           {breakdownData.length === 0
@@ -868,7 +878,7 @@ export function TrendsScreen() {
           {trendMonths.map(m => (
             <button key={m} className={'month-chip' + (activeMonth === m ? ' active' : '')}
               onClick={() => { setActiveMonth(m); setActiveDay(null) }}>
-              {monthShort(m)}
+              {monthShort(m, locale)}
             </button>
           ))}
         </div>
@@ -959,7 +969,7 @@ export function ExpenseForm({ initial, onSave, onSaveAnother, onCancel, onDelete
   const [subcategory, setSubcategory] = React.useState(initial?.subcategory || '')
   const [note, setNote] = React.useState(initial?.note || '')
   const [date, setDate] = React.useState(
-    initial?.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
+    initial?.date ? new Date(initial.date).toISOString().slice(0, 10) : (() => { const d = nowJST(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') })()
   )
 
   const sym = store.state.settings.currencySymbol

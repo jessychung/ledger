@@ -4,23 +4,39 @@ import { supabase } from './supabase'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export function uid() { return Math.random().toString(36).slice(2, 9) }
 
+const TZ = 'Asia/Tokyo'
+
+// Returns a Date whose local-time fields (getFullYear etc.) reflect JST wall clock
+export function nowJST() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: TZ }))
+}
+
 export function monthKey(date) {
   const d = date instanceof Date ? date : new Date(date)
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
 }
 
-export function monthLabel(key) {
+export function monthLabel(key, locale) {
   const [y, m] = key.split('-').map(Number)
-  return new Date(y, m - 1, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })
+  return new Date(y, m - 1, 1).toLocaleString(locale, { month: 'long', year: 'numeric' })
 }
 
-export function monthShort(key) {
+export function monthShort(key, locale) {
   const [y, m] = key.split('-').map(Number)
-  return new Date(y, m - 1, 1).toLocaleString(undefined, { month: 'short' })
+  return new Date(y, m - 1, 1).toLocaleString(locale, { month: 'short' })
+}
+
+export function monthParts(key, locale) {
+  const [y, m] = key.split('-').map(Number)
+  const d = new Date(y, m - 1, 1)
+  return {
+    month: d.toLocaleString(locale, { month: 'long' }),
+    year: d.toLocaleString(locale, { year: 'numeric' }),
+  }
 }
 
 export function nowMonthKey() {
-  const d = new Date()
+  const d = nowJST()
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
 }
 
