@@ -159,6 +159,13 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
 
+  const daysLeft = React.useMemo(() => {
+    if (activeMonth !== nowMonthKey()) return null
+    const now = new Date()
+    const [y, mo] = activeMonth.split('-').map(Number)
+    return new Date(y, mo, 0).getDate() - now.getDate()
+  }, [activeMonth])
+
   const recent = [...monthExpenses].filter(e => !e.fixed).sort((a, b) => new Date(b.date) - new Date(a.date))
   const [recentExpanded, setRecentExpanded] = React.useState(false)
   const recentVisible = recentExpanded ? recent : recent.slice(0, 6)
@@ -289,6 +296,9 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <Icon name="repeat" size={12} /> {t('home.incl_fixed')}
                 </span>
+              )}
+              {daysLeft !== null && (
+                <span>{t('home.days_left', daysLeft)}</span>
               )}
             </div>
           </div>

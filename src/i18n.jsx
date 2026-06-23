@@ -34,6 +34,7 @@ const EN = {
   'home.empty': 'Nothing yet — tap + to add an expense.',
   'home.show_more': (n) => `Show ${n} more`,
   'home.show_less': 'Show less',
+  'home.days_left': (n) => n === 0 ? 'last day' : `${n} day${n === 1 ? '' : 's'} left`,
 
   // Insights
   'insight.mom_up': (pct, a, b) => `Up ${pct}% from last month`,
@@ -177,6 +178,7 @@ const JA = {
   'home.empty': 'まだ支出がありません。＋をタップして追加しましょう。',
   'home.show_more': (n) => `さらに${n}件を表示`,
   'home.show_less': '折りたたむ',
+  'home.days_left': (n) => n === 0 ? '今日が最終日' : `残り${n}日`,
 
   // Insights
   'insight.mom_up': (pct) => `先月より${pct}%増`,
