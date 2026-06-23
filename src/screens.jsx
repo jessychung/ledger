@@ -577,10 +577,13 @@ export function TrendsScreen() {
   const breakdownData = store.state.categories
     .map(c => {
       const subMap = {}
+      let noneVal = 0
       monthVarExps.filter(e => e.category === c.id).forEach(e => {
         if (e.subcategory) subMap[e.subcategory] = (subMap[e.subcategory] || 0) + e.amount
+        else noneVal += e.amount
       })
       const subs = Object.entries(subMap).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v }))
+      if (subs.length > 0 && noneVal > 0) subs.push({ key: '__none__', value: noneVal })
       return { key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0, subs }
     })
     .filter(d => d.value > 0)
@@ -620,11 +623,14 @@ export function TrendsScreen() {
     const items = store.state.expenses.filter(e => !e.fixed && e.date.startsWith(effectiveDay))
     const byCategory = {}
     const byCatSub = {}
+    const byCatNone = {}
     items.forEach(e => {
       byCategory[e.category] = (byCategory[e.category] || 0) + e.amount
       if (e.subcategory) {
         if (!byCatSub[e.category]) byCatSub[e.category] = {}
         byCatSub[e.category][e.subcategory] = (byCatSub[e.category][e.subcategory] || 0) + e.amount
+      } else {
+        byCatNone[e.category] = (byCatNone[e.category] || 0) + e.amount
       }
     })
     return store.state.categories
@@ -632,6 +638,7 @@ export function TrendsScreen() {
         const subs = byCatSub[c.id]
           ? Object.entries(byCatSub[c.id]).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v }))
           : []
+        if (subs.length > 0 && byCatNone[c.id] > 0) subs.push({ key: '__none__', value: byCatNone[c.id] })
         return { key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: byCategory[c.id] || 0, subs }
       })
       .filter(d => d.value > 0)
@@ -729,7 +736,7 @@ export function TrendsScreen() {
                             return (
                               <div key={s.key} className="stack" style={{ gap: 4 }}>
                                 <div className="between" style={{ fontSize: 12 }}>
-                                  <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
+                                  <span style={{ color: 'var(--muted)', fontStyle: s.key === '__none__' ? 'italic' : 'normal' }}>{s.key === '__none__' ? t('trends.no_subcategory') : tsub(d.key, s.key)}</span>
                                   <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
                                 </div>
                                 <div className="bar-track" style={{ height: 4 }}>
@@ -811,7 +818,7 @@ export function TrendsScreen() {
                             return (
                               <div key={s.key} className="stack" style={{ gap: 4 }}>
                                 <div className="between" style={{ fontSize: 12 }}>
-                                  <span style={{ color: 'var(--muted)' }}>{tsub(d.key, s.key)}</span>
+                                  <span style={{ color: 'var(--muted)', fontStyle: s.key === '__none__' ? 'italic' : 'normal' }}>{s.key === '__none__' ? t('trends.no_subcategory') : tsub(d.key, s.key)}</span>
                                   <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
                                 </div>
                                 <div className="bar-track" style={{ height: 4 }}>

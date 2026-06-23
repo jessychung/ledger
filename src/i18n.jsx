@@ -71,6 +71,7 @@ const EN = {
   'trends.average': 'Average', 'trends.peak': 'Peak', 'trends.budget': 'Budget',
   'trends.daily_avg': 'Daily avg', 'trends.peak_day': 'Peak day', 'trends.month_total': 'Month total',
   'trends.weekly_avg': 'Weekly avg',
+  'trends.no_subcategory': 'Other',
   'trends.empty_month': 'No expenses this month.', 'trends.empty_day': 'No expenses this day.',
 
   // Fixed
@@ -212,6 +213,7 @@ const JA = {
   'trends.average': '平均', 'trends.peak': '最高', 'trends.budget': '予算',
   'trends.daily_avg': '日平均', 'trends.peak_day': '最高日', 'trends.month_total': '月合計',
   'trends.weekly_avg': '週平均',
+  'trends.no_subcategory': 'その他',
   'trends.empty_month': 'この月の支出はありません。', 'trends.empty_day': 'この日の支出はありません。',
 
   // Fixed
