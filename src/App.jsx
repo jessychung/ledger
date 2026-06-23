@@ -2,7 +2,7 @@ import React from 'react'
 import { StoreProvider, useStore } from './store'
 import { Icon, Sheet, useToast } from './ui'
 import { HomeScreen, ActivityScreen, TrendsScreen, ExpenseForm, FixedScreen, SettingsScreen } from './screens'
-import { LangProvider, useT } from './i18n'
+import { LangProvider, useT, useTriggerTranslate, useLang } from './i18n'
 
 const TABS = [
   { id: 'home',     labelKey: 'tab.home',     icon: 'home' },
@@ -19,6 +19,8 @@ const TAB_TO_PATH = { home: '/', activity: '/expenses', fixed: '/fixed', trends:
 function App() {
   const store = useStore()
   const t = useT()
+  const triggerTranslate = useTriggerTranslate()
+  const { lang } = useLang()
   const [tab, setTab] = React.useState(() => PATH_TO_TAB[window.location.pathname] || 'home')
   const [addOpen, setAddOpen] = React.useState(false)
   const [editingExpense, setEditingExpense] = React.useState(null)
@@ -31,6 +33,11 @@ function App() {
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', !!store.state.settings.darkMode)
   }, [store.state.settings.darkMode])
+
+  // Translate category/subcategory/fixed labels app-wide once data loads (and on lang/data change)
+  React.useEffect(() => {
+    if (!store.state.loading) triggerTranslate(store.state.categories, store.state.fixed)
+  }, [store.state.categories, store.state.fixed, store.state.loading, lang])
 
   React.useEffect(() => {
     try { localStorage.setItem('ledger.navCollapsed', navCollapsed ? '1' : '0') } catch {}
