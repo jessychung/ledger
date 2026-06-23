@@ -663,6 +663,7 @@ export function TrendsScreen() {
   const t = useT()
   const tcat = useTCat()
   const tsub = useTSubCat()
+  const tfixed = useTFixed()
   const { lang } = useLang()
   const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
   const sym = store.state.settings.currencySymbol
@@ -709,9 +710,14 @@ export function TrendsScreen() {
         if (e.subcategory) subMap[e.subcategory] = (subMap[e.subcategory] || 0) + e.amount
         else noneVal += e.amount
       })
-      const subs = Object.entries(subMap).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v }))
-      if (subs.length > 0 && noneVal > 0) subs.push({ key: '__none__', value: noneVal })
-      return { key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0, subs }
+      const varSubs = Object.entries(subMap).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v }))
+      if (varSubs.length > 0 && noneVal > 0) varSubs.push({ key: '__none__', value: noneVal })
+      const fixedSubs = includeFixed
+        ? store.state.fixed.filter(f => f.category === c.id)
+            .sort((a, b) => b.amount - a.amount)
+            .map(f => ({ key: '__fixed__' + f.id, value: f.amount, label: tfixed(f), fixed: true }))
+        : []
+      return { key: c.id, label: tcat(c), color: c.color, icon: c.icon, value: breakdown[c.id] || 0, subs: [...varSubs, ...fixedSubs] }
     })
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
@@ -855,7 +861,10 @@ export function TrendsScreen() {
                             return (
                               <div key={s.key} className="stack" style={{ gap: 4 }}>
                                 <div className="between" style={{ fontSize: 12 }}>
-                                  <span style={{ color: 'var(--muted)', fontStyle: s.key === '__none__' ? 'italic' : 'normal' }}>{s.key === '__none__' ? t('trends.no_subcategory') : tsub(d.key, s.key)}</span>
+                                  <span style={{ color: 'var(--muted)', fontStyle: s.key === '__none__' ? 'italic' : 'normal', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                    {s.fixed && <Icon name="repeat" size={10} color="var(--muted)" />}
+                                    {s.key === '__none__' ? t('trends.no_subcategory') : s.label || tsub(d.key, s.key)}
+                                  </span>
                                   <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
                                 </div>
                                 <div className="bar-track" style={{ height: 4 }}>
@@ -937,7 +946,10 @@ export function TrendsScreen() {
                             return (
                               <div key={s.key} className="stack" style={{ gap: 4 }}>
                                 <div className="between" style={{ fontSize: 12 }}>
-                                  <span style={{ color: 'var(--muted)', fontStyle: s.key === '__none__' ? 'italic' : 'normal' }}>{s.key === '__none__' ? t('trends.no_subcategory') : tsub(d.key, s.key)}</span>
+                                  <span style={{ color: 'var(--muted)', fontStyle: s.key === '__none__' ? 'italic' : 'normal', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                    {s.fixed && <Icon name="repeat" size={10} color="var(--muted)" />}
+                                    {s.key === '__none__' ? t('trends.no_subcategory') : s.label || tsub(d.key, s.key)}
+                                  </span>
                                   <span className="mono" style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{sym}{Math.round(s.value).toLocaleString()}</span>
                                 </div>
                                 <div className="bar-track" style={{ height: 4 }}>

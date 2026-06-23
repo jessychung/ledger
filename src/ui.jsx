@@ -1,6 +1,6 @@
 import React from 'react'
 import { monthShort } from './store'
-import { useT, useTCat, useTSubCat } from './i18n'
+import { useT, useLang, useTCat, useTSubCat } from './i18n'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 export const Icon = ({ name, size = 18, color = 'currentColor', stroke = 1.6 }) => {
@@ -290,11 +290,14 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
   const t = useT()
   const tcat = useTCat()
   const tsub = useTSubCat()
-  const d = new Date(expense.date)
-  const dateLabel = d.toLocaleString(undefined, { month: 'short', day: 'numeric' })
+  const { lang } = useLang()
+  const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
+  const d = new Date(expense.date + (expense.date.length === 10 ? 'T12:00:00' : ''))
+  const dateLabel = d.toLocaleString(locale, { month: 'short', day: 'numeric' })
   const showCents = currency ? !['JPY','KRW','VND','CLP','HUF'].includes(currency) : true
   const amt = Number(expense.amount)
   const amtStr = showCents ? amt.toFixed(2) : Math.round(amt).toLocaleString()
+  const subLabel = tsub(cat?.id, expense.subcategory) || tcat(cat)
   return (
     <button onClick={onClick}
       style={{ background: 'none', border: 0, padding: 0, width: '100%', textAlign: 'left', cursor: onClick ? 'pointer' : 'default' }}>
@@ -304,14 +307,13 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
         </div>
         <div className="stack" style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {tsub(cat?.id, expense.subcategory) || tcat(cat)}
+            {expense.note || subLabel}
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>{tcat(cat)}</span>
-            {expense.note && <><span className="dot" /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{expense.note}</span></>}
-            <span className="dot" />
-            <span>{dateLabel}</span>
-            {expense.fixed && <><span className="dot" /><span style={{ fontStyle: 'italic' }}>{t('fixed.monthly')}</span></>}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1 }}>{subLabel}</span>
+            <span className="dot" style={{ flexShrink: 0 }} />
+            <span style={{ flexShrink: 0 }}>{dateLabel}</span>
+            {expense.fixed && <><span className="dot" style={{ flexShrink: 0 }} /><span style={{ fontStyle: 'italic', flexShrink: 0 }}>{t('fixed.monthly')}</span></>}
           </div>
         </div>
         <div className="amt">{currencySym}{amtStr}</div>
