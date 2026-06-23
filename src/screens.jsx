@@ -287,19 +287,24 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
               {fmt(total, sym).whole}
               {showCents && <span className="cents">.{fmt(total, sym).cents}</span>}
             </div>
-            <div className="row gap-3" style={{ flexWrap: 'wrap', color: 'var(--muted)', fontSize: 13 }}>
-              {effectiveBudget > 0 && (overBudget
-                ? <span style={{ color: 'var(--alert)' }}>{t('home.over_budget', sym, Math.abs(remaining).toFixed(0), effectiveBudget.toLocaleString())}</span>
-                : <span>{t('home.under_budget', sym, remaining.toFixed(0), effectiveBudget.toLocaleString())}</span>
-              )}
-              {includeFixed && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <Icon name="repeat" size={12} /> {t('home.incl_fixed')}
-                </span>
-              )}
-              {daysLeft !== null && (
-                <span>{t('home.days_left', daysLeft)}</span>
-              )}
+            <div className="row" style={{ flexWrap: 'wrap', color: 'var(--muted)', fontSize: 13, gap: '4px 8px', alignItems: 'center' }}>
+              {[
+                effectiveBudget > 0 ? (overBudget
+                  ? <span style={{ color: 'var(--alert)' }}>{t('home.over_budget', sym, Math.abs(remaining).toFixed(0), effectiveBudget.toLocaleString())}</span>
+                  : <span>{t('home.under_budget', sym, remaining.toFixed(0), effectiveBudget.toLocaleString())}</span>
+                ) : null,
+                includeFixed ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Icon name="repeat" size={12} /> {t('home.incl_fixed')}
+                  </span>
+                ) : null,
+                daysLeft !== null ? <span>{t('home.days_left', daysLeft)}</span> : null,
+              ].filter(Boolean).map((item, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span style={{ opacity: 0.35 }}>·</span>}
+                  {item}
+                </React.Fragment>
+              ))}
             </div>
           </div>
           <div className="hero-ring">
