@@ -659,12 +659,15 @@ export function TrendsScreen() {
   const trendMonths = React.useMemo(() => {
     const arr = []
     const now = new Date()
+    const nowKey = nowMonthKey()
+    const expMonths = new Set(store.state.expenses.map(e => monthKey(e.date)))
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      arr.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'))
+      const m = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+      if (m === nowKey || expMonths.has(m)) arr.push(m)
     }
     return arr
-  }, [])
+  }, [store.state.expenses])
 
   const fixedTotal = store.state.fixed.reduce((s, f) => s + f.amount, 0)
   const effectiveBudget = budget > 0 ? (includeFixed ? budget : Math.max(0, budget - fixedTotal)) : 0
@@ -847,7 +850,7 @@ export function TrendsScreen() {
       </>) : (<>
         {/* Month picker for daily view */}
         <div className="month-strip">
-          {trendMonths.filter(m => m === nowMonthKey() || (totals[m] || 0) > 0).map(m => (
+          {trendMonths.map(m => (
             <button key={m} className={'month-chip' + (activeMonth === m ? ' active' : '')}
               onClick={() => { setActiveMonth(m); setActiveDay(null) }}>
               {monthShort(m)}
