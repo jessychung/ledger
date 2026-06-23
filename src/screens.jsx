@@ -119,9 +119,12 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const store = useStore()
   const t = useT()
   const tcat = useTCat()
+  const { lang } = useLang()
   const [activeMonth, setActiveMonth] = React.useState(nowMonthKey())
   const [chartMode, setChartMode] = React.useState('donut')
   const [hoverIdx, setHoverIdx] = React.useState(null)
+  const [aiTipsCache, setAiTipsCache] = React.useState({})
+  const [aiTipsLoading, setAiTipsLoading] = React.useState(false)
 
   const includeFixed = store.state.settings.includeFixedInTotal
   const sym = store.state.settings.currencySymbol
@@ -160,6 +163,62 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
   const recentVisible = recentExpanded ? recent : recent.slice(0, 6)
   const ringColor = overBudget ? 'var(--alert)' : pct > 0.85 ? 'var(--warn)' : 'var(--ink)'
   const insights = React.useMemo(() => generateInsights(store.state, activeMonth, t, includeFixed, tcat), [store.state, activeMonth, t, includeFixed, tcat])
+
+  const aiCacheKey = React.useMemo(() => {
+    const catStr = breakdownData.map(d => `${d.key}:${Math.round(d.value)}`).join(',')
+    return `${activeMonth}-${Math.round(total)}-${catStr}`
+  }, [activeMonth, total, breakdownData])
+
+  React.useEffect(() => {
+    if (aiTipsCache[aiCacheKey] || aiTipsLoading) return
+    if (total < 100 || breakdownData.length === 0) return
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+    if (!apiKey) return
+
+    const [y, mo] = activeMonth.split('-').map(Number)
+    const monthName = new Date(y, mo - 1, 1).toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US', { month: 'long', year: 'numeric' })
+    const lastMk = monthKey(new Date(y, mo - 2, 1))
+    const lastBreakdown = breakdownByCategory(store.state, lastMk, includeFixed)
+
+    const catLines = breakdownData.map(d => {
+      const catPct = total > 0 ? Math.round(d.value / total * 100) : 0
+      const lastVal = lastBreakdown[d.key] || 0
+      const momPct = lastVal > 0 ? Math.round((d.value - lastVal) / lastVal * 100) : null
+      return `${d.label}: ${sym}${Math.round(d.value).toLocaleString()} (${catPct}%${momPct !== null ? `, ${momPct > 0 ? '+' : ''}${momPct}% vs last month` : ''})`
+    }).join('\n')
+
+    const budgetLine = effectiveBudget > 0
+      ? `Budget: ${sym}${effectiveBudget.toLocaleString()} — ${Math.round(pct * 100)}% used${overBudget ? ' (OVER BUDGET)' : ''}`
+      : 'No budget set'
+
+    setAiTipsLoading(true)
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `You are a personal finance coach. Spending for ${monthName}:\n${budgetLine}\n${catLines}\n\nGive 2-3 specific, actionable suggestions to help them spend less or smarter. 1 concise sentence each, reference their actual numbers. Reply in ${lang === 'ja' ? 'Japanese' : 'English'}. Reply with only a JSON array of suggestion strings, no explanation.`,
+        }],
+      }),
+    }).then(r => r.json()).then(data => {
+      const raw = data.content?.[0]?.text?.replace(/```[a-z]*\n?/g, '').trim()
+      if (!raw) return
+      try {
+        const tips = JSON.parse(raw)
+        if (Array.isArray(tips) && tips.length > 0) setAiTipsCache(prev => ({ ...prev, [aiCacheKey]: tips }))
+      } catch {}
+    }).catch(() => {}).finally(() => setAiTipsLoading(false))
+  }, [aiCacheKey])
+
+  const aiTips = aiTipsCache[aiCacheKey]
 
   const monthEndReport = React.useMemo(() => {
     const now = new Date()
@@ -210,7 +269,7 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
       </div>
 
       {/* Hero card */}
-      <div className="card hero-card" style={{ padding: 28 }}>
+      <div className="card hero-card" style={{ padding: 28, marginTop: -8 }}>
         <div className="hero-card-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 28, alignItems: 'center' }}>
           <div className="stack gap-3">
             <div className="label-eyebrow">{activeMonth === nowMonthKey() ? t('home.spent_so_far') : t('home.spent')}</div>
@@ -308,6 +367,34 @@ export function HomeScreen({ onAdd, onPickMonth, onOpenExpense }) {
               {ins.headline}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Smart tips */}
+      {(aiTips || aiTipsLoading) && (
+        <div className="card stack gap-3">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 15 }}>💡</span>
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{t('insight.smart_tips')}</span>
+            {aiTipsLoading && <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 4 }}>{t('loading')}</span>}
+          </div>
+          {aiTips && (
+            <div className="stack" style={{ gap: 10 }}>
+              {aiTips.map((tip, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, fontSize: 13, lineHeight: 1.5 }}>
+                  <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>→</span>
+                  <span>{tip}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {aiTipsLoading && !aiTips && (
+            <div style={{ display: 'flex', gap: 5, padding: '2px 0' }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--muted-2)', opacity: 0.6 }} />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
