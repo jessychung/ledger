@@ -714,11 +714,9 @@ export function TrendsScreen() {
                               <Icon name={d.icon} size={12} color={d.color} />
                             </span>
                             <span style={{ fontSize: 14 }}>{d.label}</span>
-                          </div>
-                          <div className="row gap-2" style={{ alignItems: 'center' }}>
-                            <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
                             {hasSubs && <Icon name={isExpanded ? 'chevron-u' : 'chevron-d'} size={12} color="var(--muted)" />}
                           </div>
+                          <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
                         </div>
                         <div className="bar-track">
                           <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
@@ -790,11 +788,9 @@ export function TrendsScreen() {
                               <Icon name={d.icon} size={12} color={d.color} />
                             </span>
                             <span style={{ fontSize: 14 }}>{d.label}</span>
-                          </div>
-                          <div className="row gap-2" style={{ alignItems: 'center' }}>
-                            <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
                             {hasSubs && <Icon name={isExpanded ? 'chevron-u' : 'chevron-d'} size={12} color="var(--muted)" />}
                           </div>
+                          <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{sym}{d.value.toFixed(0)}</span>
                         </div>
                         <div className="bar-track">
                           <div className="bar-fill" style={{ width: frac * 100 + '%', background: d.color, transition: 'width 400ms' }} />
