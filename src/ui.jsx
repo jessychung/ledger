@@ -195,10 +195,8 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
   }
 
   const innerMinWidth = minBarWidth ? months.length * (minBarWidth + gap) : undefined
-  // Bar geometry constants — budget line uses same values so it aligns exactly.
-  // Grid height: 160px, bars max out at 130px, bar bottom sits 25px above grid bottom
-  // (dot 3 + gap 4 + label ~14 + gap 4). So: bar_top = 135 - (v/max)*130 from grid top.
-  const GRID_H = 160, BAR_MAX = 130, BAR_FLOOR = 135
+  const CHART_H = 130  // fixed bar drawing area height
+  const LABEL_H = 20   // fixed label area height below bars
   return (
     <div style={{ position: 'relative' }}>
     {minBarWidth && canLeft && (
@@ -216,37 +214,43 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
       {budget > 0 && (
         <div style={{
           position: 'absolute', left: 0, right: 0,
-          top: BAR_FLOOR - (budget / max) * BAR_MAX,
+          top: CHART_H * (1 - budget / max),
           height: 1, borderTop: '1px dashed var(--muted-2)', pointerEvents: 'none', zIndex: 2,
         }} />
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap, alignItems: 'end', height: GRID_H, minWidth: innerMinWidth }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${months.length}, 1fr)`, gap, alignItems: 'stretch', height: CHART_H + LABEL_H, minWidth: innerMinWidth }}>
         {months.map((mk, i) => {
           const v = values[i]
-          const h = Math.max(2, (v / max) * BAR_MAX)
+          const h = Math.max(2, (v / max) * CHART_H)
           const isActive = mk === activeKey
           const overBudget = budget && v > budget
           const showLabel = v > 0 && (!dense || isActive)
           const isWeekend = weekends?.has(mk)
           return (
             <button key={mk} onClick={() => onPick && onPick(mk)}
-              style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: onPick ? 'pointer' : 'default', minWidth: 0, overflow: 'visible', position: 'relative', zIndex: isActive ? 1 : 0 }}>
-              <div style={{ fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums',
-                whiteSpace: 'nowrap', overflow: 'visible',
-                visibility: showLabel ? 'visible' : 'hidden' }}>
-                {fmtBarVal(v, currencySym)}
+              style={{ background: 'none', border: 0, padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: onPick ? 'pointer' : 'default', minWidth: 0, position: 'relative', zIndex: isActive ? 1 : 0 }}>
+              {/* Chart area — bars sit at the bottom, value label floats above bar */}
+              <div style={{ height: CHART_H, width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
+                <div style={{
+                  position: 'absolute', bottom: h + 4, left: 0, right: 0, textAlign: 'center',
+                  fontSize: 10, color: isActive ? 'var(--ink)' : 'var(--muted)', fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap', visibility: showLabel ? 'visible' : 'hidden',
+                }}>
+                  {fmtBarVal(v, currencySym)}
+                </div>
+                <div style={{
+                  width: '70%', maxWidth: 36, height: h,
+                  background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
+                  borderRadius: 4, opacity: isActive ? 1 : 0.35, transition: 'all 200ms',
+                }} />
               </div>
-              <div style={{
-                width: '70%', maxWidth: 36, height: h,
-                background: isActive ? 'var(--ink)' : (overBudget ? 'var(--alert)' : 'var(--ink-2)'),
-                borderRadius: 4,
-                opacity: isActive ? 1 : 0.35,
-                transition: 'all 200ms',
-              }} />
-              <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                {labels ? labels[i] : monthShort(mk)}
+              {/* Label area — fixed height, font-size independent */}
+              <div style={{ height: LABEL_H, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 3, gap: 2 }}>
+                <div style={{ fontSize: 11, color: isActive ? 'var(--ink)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {labels ? labels[i] : monthShort(mk)}
+                </div>
+                {isWeekend && <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: 0.5 }} />}
               </div>
-              <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--muted)', opacity: isWeekend ? 0.5 : 0, marginTop: -2 }} />
             </button>
           )
         })}
