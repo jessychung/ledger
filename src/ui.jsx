@@ -310,7 +310,7 @@ export function ExpenseRow({ expense, cat, currencySym, currency, onClick }) {
             {expense.note || subLabel}
           </div>
           <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1 }}>{subLabel}</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1 }}>{tcat(cat)}</span>
             <span className="dot" style={{ flexShrink: 0 }} />
             <span style={{ flexShrink: 0 }}>{dateLabel}</span>
             {expense.fixed && <><span className="dot" style={{ flexShrink: 0 }} /><span style={{ fontStyle: 'italic', flexShrink: 0 }}>{t('fixed.monthly')}</span></>}
