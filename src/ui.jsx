@@ -66,10 +66,19 @@ export function ProgressRing({ pct, size = 240, stroke = 10, color, track }) {
 // ── Arc gauge (hero card) ─────────────────────────────────────────────────────
 export function ArcGauge({ pct, size = 200, color, track }) {
   const [displayPct, setDisplayPct] = React.useState(0)
+  const rafRef = React.useRef(null)
   React.useEffect(() => {
-    setDisplayPct(0)
-    const id = requestAnimationFrame(() => setDisplayPct(pct))
-    return () => cancelAnimationFrame(id)
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    const duration = 700
+    const start = performance.now()
+    const animate = (now) => {
+      const t = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplayPct(pct * eased)
+      if (t < 1) rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
   }, [pct])
 
   const r = 76, cx = 100, cy = 108
@@ -88,7 +97,7 @@ export function ArcGauge({ pct, size = 200, color, track }) {
       <path d={pathD} fill="none" stroke={track || 'var(--line)'} strokeWidth={13} strokeLinecap="round" />
       <path d={pathD} fill="none" stroke={c} strokeWidth={13} strokeLinecap="round"
         strokeDasharray={`${filled.toFixed(1)} ${(arcLen + 20).toFixed(1)}`}
-        style={{ transition: 'stroke-dasharray 700ms cubic-bezier(.2,.8,.2,1), stroke 200ms' }} />
+        style={{ transition: 'stroke 200ms' }} />
       <text x={cx} y={cy - 8} textAnchor="middle" fontSize="38"
         fontFamily="'Instrument Serif', serif" fill={c}>
         {Math.round(displayPct * 100)}%
