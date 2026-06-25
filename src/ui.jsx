@@ -66,14 +66,10 @@ export function ProgressRing({ pct, size = 240, stroke = 10, color, track }) {
 // ── Arc gauge (hero card) ─────────────────────────────────────────────────────
 export function ArcGauge({ pct, size = 200, color, track }) {
   const [displayPct, setDisplayPct] = React.useState(0)
-  const didMount = React.useRef(false)
   React.useEffect(() => {
-    if (!didMount.current) {
-      didMount.current = true
-      const id = requestAnimationFrame(() => setDisplayPct(pct))
-      return () => cancelAnimationFrame(id)
-    }
-    setDisplayPct(pct)
+    setDisplayPct(0)
+    const id = requestAnimationFrame(() => setDisplayPct(pct))
+    return () => cancelAnimationFrame(id)
   }, [pct])
 
   const r = 76, cx = 100, cy = 108
