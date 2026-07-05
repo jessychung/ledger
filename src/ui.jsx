@@ -212,7 +212,7 @@ export function MonthBars({ months, values, labels, budget, currencySym = '$', o
 
   const innerMinWidth = minBarWidth ? months.length * (minBarWidth + gap) : undefined
   const CHART_H = 130  // fixed bar drawing area height
-  const LABEL_H = 20   // fixed label area height below bars
+  const LABEL_H = 26   // fixed label area height below bars (needs room for text + dot)
   return (
     <div style={{ position: 'relative' }}>
     {minBarWidth && canLeft && (
